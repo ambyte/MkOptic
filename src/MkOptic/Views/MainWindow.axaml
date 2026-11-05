@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<suki:SukiWindow x:Class="MkOptic.Views.MainWindow"
+                 xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:suki="https://github.com/kikipoulet/SukiUI"
+                 xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+                 xmlns:docs="clr-namespace:MkOptic.Core.Documents;assembly=MkOptic.Core"
+                 xmlns:models="clr-namespace:SukiUI.Models;assembly=SukiUI"
+                 xmlns:vm="clr-namespace:MkOptic.ViewModels"
+                 xmlns:views="clr-namespace:MkOptic.Views"
+                 mc:Ignorable="d"
+                 d:DesignWidth="1280"
+                 d:DesignHeight="800"
+                 x:DataType="vm:MainWindowViewModel"
+                 Title="{Binding WindowTitle}"
+                 Icon="/Assets/mkoptic.ico"
+                 Width="1360"
+                 Height="860"
+                 MinWidth="760"
+                 MinHeight="480"
+                 WindowStartupLocation="CenterScreen"
+                 BackgroundStyle="GradientSoft"
+                 IsMenuVisible="True"
+                 DragDrop.AllowDrop="True">
+    <suki:SukiWindow.Hosts>
+        <suki:SukiToastHost x:Name="ToastHost" />
+        <suki:SukiDialogHost x:Name="DialogHost" />
+    </suki:SukiWindow.Hosts>
+    <suki:SukiWindow.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N"
+                    Command="{Binding NewDocumentCommand}" />
+        <KeyBinding Gesture="Ctrl+O"
+                    Command="{Binding OpenCommand}" />
+        <KeyBinding Gesture="Ctrl+S"
+                    Command="{Binding SaveCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+S"
+                    Command="{Binding SaveAsCommand}" />
+        <KeyBinding Gesture="Ctrl+Alt+S"
+                    Command="{Binding SaveAllCommand}" />
+        <KeyBinding Gesture="Ctrl+W"
+                    Command="{Binding CloseActiveCommand}" />
+        <KeyBinding Gesture="Ctrl+Tab"
+                    Command="{Binding NextDocumentCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+Tab"
+                    Command="{Binding PreviousDocumentCommand}" />
+        <KeyBinding Gesture="Ctrl+1"
+                    Command="{Binding SetViewModeCommand}"
+                    CommandParameter="{x:Static docs:DocumentViewMode.Editor}" />
+        <KeyBinding Gesture="Ctrl+2"
+                    Command="{Binding SetViewModeCommand}"
+                    CommandParameter="{x:Static docs:DocumentViewMode.Split}" />
+        <KeyBinding Gesture="Ctrl+3"
+                    Command="{Binding SetViewModeCommand}"
+                    CommandParameter="{x:Static docs:DocumentViewMode.Preview}" />
+        <KeyBinding Gesture="Ctrl+OemPlus"
+                    Command="{Binding EditorSettings.ZoomInCommand}" />
+        <KeyBinding Gesture="Ctrl+OemMinus"
+                    Command="{Binding EditorSettings.ZoomOutCommand}" />
+        <KeyBinding Gesture="Ctrl+D0"
+                    Command="{Binding EditorSettings.ResetZoomCommand}" />
+        <KeyBinding Gesture="Ctrl+OemPipe"
+                    Command="{Binding ToggleSidebarCommand}" />
+    </suki:SukiWindow.KeyBindings>
+    <suki:SukiWindow.LogoContent>
+        <mi:MaterialIcon Width="20"
+                         Height="20"
+                         VerticalAlignment="Center"
+                         Foreground="{DynamicResource SukiPrimaryColor}"
+                         Kind="LanguageMarkdown" />
+    </suki:SukiWindow.LogoContent>
+    <suki:SukiWindow.RightWindowTitleBarControls>
+        <Button Classes="WindowControlsButton"
+                Command="{Binding ToggleThemeCommand}"
+                ToolTip.Tip="Light / dark theme">
+            <mi:MaterialIcon Foreground="{DynamicResource SukiText}"
+                             Kind="ThemeLightDark" />
+        </Button>
+    </suki:SukiWindow.RightWindowTitleBarControls>
+    <suki:SukiWindow.MenuItems>
+        <views:FileMenuItem />
+        <views:ViewMenuItem />
+        <views:ThemeMenuItem />
+    </suki:SukiWindow.MenuItems>
+    <suki:SukiWindow.DataTemplates>
+        <DataTemplate DataType="vm:DocumentViewModel">
+            <views:DocumentView />
+        </DataTemplate>
+    </suki:SukiWindow.DataTemplates>
+    <Grid Margin="8,8,8,0"
+          RowDefinitions="*,Auto"
+          ColumnDefinitions="Auto,*">
+        <views:DocumentSidebarView Grid.Row="0"
+                                   Grid.Column="0" />
+        <ContentControl Grid.Row="0"
+                        Grid.Column="1"
+                        Content="{Binding ActiveDocument}"
+                        IsVisible="{Binding HasDocuments}" />
+        <views:EmptyStateView Grid.Row="0"
+                              Grid.Column="1" />
+        <views:StatusBarView Grid.Row="1"
+                             Grid.Column="0"
+                             Grid.ColumnSpan="2" />
+    </Grid>
+</suki:SukiWindow>

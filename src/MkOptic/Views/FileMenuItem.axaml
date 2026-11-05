@@ -1,0 +1,37 @@
+﻿<MenuItem x:Class="MkOptic.Views.FileMenuItem"
+          xmlns="https://github.com/avaloniaui"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+          xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+          xmlns:vm="clr-namespace:MkOptic.ViewModels"
+          x:DataType="vm:MainWindowViewModel"
+          Header="File">
+    <MenuItem Header="New"
+              Command="{Binding NewDocumentCommand}"
+              InputGesture="Ctrl+N"
+              Icon="{mi:MaterialIconExt Kind=FilePlusOutline}" />
+    <MenuItem Header="Open…"
+              Command="{Binding OpenCommand}"
+              InputGesture="Ctrl+O"
+              Icon="{mi:MaterialIconExt Kind=FolderOpenOutline}" />
+    <Separator />
+    <MenuItem Header="Save"
+              Command="{Binding SaveCommand}"
+              InputGesture="Ctrl+S"
+              Icon="{mi:MaterialIconExt Kind=ContentSaveOutline}" />
+    <MenuItem Header="Save as…"
+              Command="{Binding SaveAsCommand}"
+              InputGesture="Ctrl+Shift+S"
+              Icon="{mi:MaterialIconExt Kind=ContentSaveEditOutline}" />
+    <MenuItem Header="Save all"
+              Command="{Binding SaveAllCommand}"
+              InputGesture="Ctrl+Alt+S"
+              Icon="{mi:MaterialIconExt Kind=ContentSaveAllOutline}" />
+    <Separator />
+    <MenuItem Header="Close"
+              Command="{Binding CloseActiveCommand}"
+              InputGesture="Ctrl+W"
+              Icon="{mi:MaterialIconExt Kind=Close}" />
+    <MenuItem Header="Exit"
+              Click="OnExitClick"
+              Icon="{mi:MaterialIconExt Kind=ExitToApp}" />
+</MenuItem>

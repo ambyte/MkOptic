@@ -1,0 +1,31 @@
+﻿<MenuItem x:Class="MkOptic.Views.ThemeMenuItem"
+          xmlns="https://github.com/avaloniaui"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+          xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+          xmlns:models="clr-namespace:SukiUI.Models;assembly=SukiUI"
+          xmlns:vm="clr-namespace:MkOptic.ViewModels"
+          xmlns:views="clr-namespace:MkOptic.Views"
+          x:DataType="vm:MainWindowViewModel"
+          Header="Theme">
+    <MenuItem Header="Light / dark"
+              Command="{Binding ToggleThemeCommand}"
+              Icon="{mi:MaterialIconExt Kind=ThemeLightDark}" />
+    <MenuItem Header="Accent color"
+              ItemsSource="{Binding ColorThemes}"
+              Icon="{mi:MaterialIconExt Kind=Palette}">
+        <MenuItem.ItemContainerTheme>
+            <ControlTheme TargetType="MenuItem"
+                          BasedOn="{StaticResource {x:Type MenuItem}}"
+                          x:DataType="models:SukiColorTheme">
+                <Setter Property="Command"
+                        Value="{Binding $parent[views:MainWindow].((vm:MainWindowViewModel)DataContext).ChangeColorThemeCommand}" />
+                <Setter Property="CommandParameter"
+                        Value="{Binding}" />
+                <Setter Property="Header"
+                        Value="{Binding DisplayName}" />
+                <Setter Property="Foreground"
+                        Value="{Binding PrimaryBrush}" />
+            </ControlTheme>
+        </MenuItem.ItemContainerTheme>
+    </MenuItem>
+</MenuItem>

@@ -1,0 +1,169 @@
+<UserControl x:Class="MkOptic.Views.DocumentView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:ae="https://github.com/avaloniaui/avaloniaedit"
+             xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
+             xmlns:docs="clr-namespace:MkOptic.Core.Documents;assembly=MkOptic.Core"
+             xmlns:editing="clr-namespace:MkOptic.Core.Editing;assembly=MkOptic.Core"
+             xmlns:conv="clr-namespace:MkOptic.Converters"
+             xmlns:vm="clr-namespace:MkOptic.ViewModels"
+             xmlns:views="clr-namespace:MkOptic.Views"
+             mc:Ignorable="d"
+             d:DesignWidth="1000"
+             d:DesignHeight="700"
+             x:DataType="vm:DocumentViewModel">
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <suki:GlassCard Margin="0,0,0,10"
+                        Padding="8,6"
+                        CornerRadius="14"
+                        DockPanel.Dock="Top">
+            <DockPanel>
+                <Border Padding="3"
+                        Background="{DynamicResource SukiPrimaryColor5}"
+                        CornerRadius="9"
+                        DockPanel.Dock="Right">
+                    <StackPanel Orientation="Horizontal" Spacing="2">
+                        <RadioButton Classes="Segment"
+                                     GroupName="ViewMode"
+                                     IsChecked="{Binding ViewMode, Converter={x:Static conv:EnumEqualsConverter.Instance}, ConverterParameter={x:Static docs:DocumentViewMode.Editor}}"
+                                     ToolTip.Tip="Editor only (Ctrl+1)">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="CodeTags" />
+                                <TextBlock Text="Source" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Classes="Segment"
+                                     GroupName="ViewMode"
+                                     IsChecked="{Binding ViewMode, Converter={x:Static conv:EnumEqualsConverter.Instance}, ConverterParameter={x:Static docs:DocumentViewMode.Split}}"
+                                     ToolTip.Tip="Editor and preview (Ctrl+2)">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="ViewSplitVertical" />
+                                <TextBlock Text="Split" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Classes="Segment"
+                                     GroupName="ViewMode"
+                                     IsChecked="{Binding ViewMode, Converter={x:Static conv:EnumEqualsConverter.Instance}, ConverterParameter={x:Static docs:DocumentViewMode.Preview}}"
+                                     ToolTip.Tip="Preview only (Ctrl+3)">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="EyeOutline" />
+                                <TextBlock Text="Preview" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                </Border>
+
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="FormattingToolbar"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                        <StackPanel.Styles>
+                            <Style Selector="Button.Tool">
+                                <Setter Property="Command" Value="{Binding $parent[views:DocumentView].FormatCommand}" />
+                            </Style>
+                        </StackPanel.Styles>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Heading1}" ToolTip.Tip="Heading 1 (Ctrl+Alt+1)">
+                            <mi:MaterialIcon Kind="FormatHeader1" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Heading2}" ToolTip.Tip="Heading 2 (Ctrl+Alt+2)">
+                            <mi:MaterialIcon Kind="FormatHeader2" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Heading3}" ToolTip.Tip="Heading 3 (Ctrl+Alt+3)">
+                            <mi:MaterialIcon Kind="FormatHeader3" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Bold}" ToolTip.Tip="Bold (Ctrl+B)">
+                            <mi:MaterialIcon Kind="FormatBold" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Italic}" ToolTip.Tip="Italic (Ctrl+I)">
+                            <mi:MaterialIcon Kind="FormatItalic" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Strikethrough}" ToolTip.Tip="Strikethrough">
+                            <mi:MaterialIcon Kind="FormatStrikethroughVariant" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.InlineCode}" ToolTip.Tip="Inline code (Ctrl+E)">
+                            <mi:MaterialIcon Kind="CodeBraces" />
+                        </Button>
+                        <Separator Classes="Toolbar" />
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.BulletList}" ToolTip.Tip="Bulleted list">
+                            <mi:MaterialIcon Kind="FormatListBulleted" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.NumberedList}" ToolTip.Tip="Numbered list">
+                            <mi:MaterialIcon Kind="FormatListNumbered" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.TaskList}" ToolTip.Tip="Task list">
+                            <mi:MaterialIcon Kind="FormatListChecks" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Quote}" ToolTip.Tip="Quote">
+                            <mi:MaterialIcon Kind="FormatQuoteOpen" />
+                        </Button>
+                        <Separator Classes="Toolbar" />
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Link}" ToolTip.Tip="Link (Ctrl+K)">
+                            <mi:MaterialIcon Kind="LinkVariant" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Image}" ToolTip.Tip="Image">
+                            <mi:MaterialIcon Kind="ImageOutline" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Table}" ToolTip.Tip="Table">
+                            <mi:MaterialIcon Kind="TableLarge" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.CodeBlock}" ToolTip.Tip="Code block">
+                            <mi:MaterialIcon Kind="CodeBlockTags" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.HorizontalRule}" ToolTip.Tip="Horizontal rule">
+                            <mi:MaterialIcon Kind="Minus" />
+                        </Button>
+                        <Separator Classes="Toolbar" />
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.InlineMath}" ToolTip.Tip="Inline math $…$ (Ctrl+M)">
+                            <mi:MaterialIcon Kind="Sigma" />
+                        </Button>
+                        <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.MathBlock}" ToolTip.Tip="Math block $$…$$">
+                            <mi:MaterialIcon Kind="FunctionVariant" />
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </suki:GlassCard>
+
+        <!-- Editor and preview -->
+        <Grid x:Name="SplitGrid" ColumnDefinitions="*,10,*">
+            <suki:GlassCard x:Name="EditorCard"
+                            Grid.Column="0"
+                            Padding="0"
+                            CornerRadius="14">
+                <ae:TextEditor x:Name="Editor"
+                               Document="{Binding Document}"
+                               FontFamily="{Binding Settings.FontFamily}"
+                               FontSize="{Binding Settings.FontSize}"
+                               WordWrap="{Binding Settings.WordWrap}"
+                               ShowLineNumbers="{Binding Settings.ShowLineNumbers}"
+                               HorizontalScrollBarVisibility="Auto"
+                               VerticalScrollBarVisibility="Auto" />
+            </suki:GlassCard>
+
+            <GridSplitter x:Name="Splitter"
+                          Grid.Column="1"
+                          Background="Transparent"
+                          ResizeDirection="Columns" />
+
+            <suki:GlassCard x:Name="PreviewCard"
+                            Grid.Column="2"
+                            Padding="0"
+                            CornerRadius="14">
+                <ScrollViewer x:Name="PreviewScrollViewer" HorizontalScrollBarVisibility="Disabled">
+                    <md:MarkdownRenderer x:Name="Preview"
+                                         Margin="28,20"
+                                         MaxWidth="960"
+                                         ImageBasePath="{Binding DirectoryPath}"
+                                         MarkdownBuilder="{Binding PreviewText, Converter={x:Static md:ValueConverters.ToObservableStringBuilder}}"
+                                         LinkClick="OnPreviewLinkClick" />
+                </ScrollViewer>
+            </suki:GlassCard>
+        </Grid>
+    </DockPanel>
+</UserControl>

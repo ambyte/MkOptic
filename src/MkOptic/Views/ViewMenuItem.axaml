@@ -1,0 +1,48 @@
+﻿<MenuItem x:Class="MkOptic.Views.ViewMenuItem"
+          xmlns="https://github.com/avaloniaui"
+          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+          xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+          xmlns:docs="clr-namespace:MkOptic.Core.Documents;assembly=MkOptic.Core"
+          xmlns:vm="clr-namespace:MkOptic.ViewModels"
+          x:DataType="vm:MainWindowViewModel"
+          Header="View">
+    <MenuItem Header="Editor only"
+              Command="{Binding SetViewModeCommand}"
+              CommandParameter="{x:Static docs:DocumentViewMode.Editor}"
+              InputGesture="Ctrl+1"
+              Icon="{mi:MaterialIconExt Kind=CodeTags}" />
+    <MenuItem Header="Editor and preview"
+              Command="{Binding SetViewModeCommand}"
+              CommandParameter="{x:Static docs:DocumentViewMode.Split}"
+              InputGesture="Ctrl+2"
+              Icon="{mi:MaterialIconExt Kind=ViewSplitVertical}" />
+    <MenuItem Header="Preview only"
+              Command="{Binding SetViewModeCommand}"
+              CommandParameter="{x:Static docs:DocumentViewMode.Preview}"
+              InputGesture="Ctrl+3"
+              Icon="{mi:MaterialIconExt Kind=EyeOutline}" />
+    <Separator />
+    <MenuItem Header="Open files panel"
+              Command="{Binding ToggleSidebarCommand}"
+              InputGesture="Ctrl+OemPipe"
+              ToggleType="CheckBox"
+              IsChecked="{Binding IsSidebarOpen, Mode=OneWay}" />
+    <MenuItem Header="Word wrap"
+              ToggleType="CheckBox"
+              IsChecked="{Binding EditorSettings.WordWrap}" />
+    <MenuItem Header="Line numbers"
+              ToggleType="CheckBox"
+              IsChecked="{Binding EditorSettings.ShowLineNumbers}" />
+    <Separator />
+    <MenuItem Header="Increase font size"
+              Command="{Binding EditorSettings.ZoomInCommand}"
+              InputGesture="Ctrl+OemPlus"
+              Icon="{mi:MaterialIconExt Kind=MagnifyPlusOutline}" />
+    <MenuItem Header="Decrease font size"
+              Command="{Binding EditorSettings.ZoomOutCommand}"
+              InputGesture="Ctrl+OemMinus"
+              Icon="{mi:MaterialIconExt Kind=MagnifyMinusOutline}" />
+    <MenuItem Header="Reset zoom"
+              Command="{Binding EditorSettings.ResetZoomCommand}"
+              InputGesture="Ctrl+D0" />
+</MenuItem>

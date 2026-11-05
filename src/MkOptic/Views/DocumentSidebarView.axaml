@@ -1,0 +1,90 @@
+﻿<UserControl x:Class="MkOptic.Views.DocumentSidebarView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:MkOptic.ViewModels"
+             xmlns:views="clr-namespace:MkOptic.Views"
+             mc:Ignorable="d"
+             d:DesignWidth="260"
+             d:DesignHeight="600"
+             x:DataType="vm:MainWindowViewModel">
+    <!-- Open files panel -->
+    <suki:GlassCard Width="260"
+                    Margin="0,0,10,0"
+                    Padding="6,10"
+                    CornerRadius="14"
+                    IsVisible="{Binding IsSidebarOpen}">
+        <DockPanel>
+            <DockPanel Margin="6,2,0,10"
+                       DockPanel.Dock="Top">
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal"
+                            Spacing="2">
+                    <Button Classes="Basic Tool"
+                            Command="{Binding NewDocumentCommand}"
+                            ToolTip.Tip="New (Ctrl+N)">
+                        <mi:MaterialIcon Kind="FilePlusOutline" />
+                    </Button>
+                    <Button Classes="Basic Tool"
+                            Command="{Binding OpenCommand}"
+                            ToolTip.Tip="Open (Ctrl+O)">
+                        <mi:MaterialIcon Kind="FolderOpenOutline" />
+                    </Button>
+                </StackPanel>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock FontSize="15"
+                               FontWeight="SemiBold"
+                               Text="Open files" />
+                    <TextBlock Classes="Caption"
+                               Text="{Binding Documents.Count, StringFormat='Documents: {0}'}" />
+                </StackPanel>
+            </DockPanel>
+            <ListBox Classes="Documents"
+                     ItemsSource="{Binding Documents}"
+                     SelectedItem="{Binding ActiveDocument}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="vm:DocumentViewModel">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                              ToolTip.Tip="{Binding FilePath, TargetNullValue='New document'}">
+                            <mi:MaterialIcon Grid.Column="0"
+                                             Width="20"
+                                             Height="20"
+                                             Margin="0,0,8,0"
+                                             VerticalAlignment="Center"
+                                             Foreground="{DynamicResource SukiPrimaryColor}"
+                                             Kind="LanguageMarkdownOutline" />
+                            <TextBlock Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       Text="{Binding Title}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <Ellipse Grid.Column="2"
+                                     Width="7"
+                                     Height="7"
+                                     Margin="6,0,0,0"
+                                     VerticalAlignment="Center"
+                                     Fill="{DynamicResource SukiPrimaryColor}"
+                                     IsVisible="{Binding IsDirty}"
+                                     ToolTip.Tip="Unsaved changes" />
+                            <Button Grid.Column="3"
+                                    Classes="Basic Tool CloseDocument"
+                                    Width="26"
+                                    Height="26"
+                                    Command="{Binding $parent[views:DocumentSidebarView].((vm:MainWindowViewModel)DataContext).CloseCommand}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip.Tip="Close">
+                                <mi:MaterialIcon Width="14"
+                                                 Height="14"
+                                                 Kind="Close" />
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </suki:GlassCard>
+</UserControl>

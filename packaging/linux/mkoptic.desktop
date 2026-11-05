@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MkOptic
+GenericName=Markdown Editor
+Comment=View and edit Markdown files with live preview
+Exec=mkoptic %F
+Icon=mkoptic
+Terminal=false
+Categories=Office;TextEditor;Utility;
+MimeType=text/markdown;text/x-markdown;
+StartupWMClass=MkOptic

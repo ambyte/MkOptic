@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="MkOptic.Views.StatusBarView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MkOptic.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1000"
+             d:DesignHeight="30"
+             x:DataType="vm:MainWindowViewModel">
+    <DockPanel Height="30"
+               Margin="4,0">
+        <StackPanel DockPanel.Dock="Right"
+                    Orientation="Horizontal"
+                    Spacing="18"
+                    IsVisible="{Binding ActiveDocument, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Classes="Caption"
+                       VerticalAlignment="Center">
+                <Run Text="Ln " />
+                <Run Text="{Binding ActiveDocument.CaretLine}" />
+                <Run Text=", Col " />
+                <Run Text="{Binding ActiveDocument.CaretColumn}" />
+            </TextBlock>
+            <TextBlock Classes="Caption"
+                       VerticalAlignment="Center"
+                       Text="{Binding ActiveDocument.Statistics.Words, StringFormat='Words: {0}'}" />
+            <TextBlock Classes="Caption"
+                       VerticalAlignment="Center"
+                       Text="{Binding ActiveDocument.Statistics.Characters, StringFormat='Characters: {0}'}" />
+            <TextBlock Classes="Caption"
+                       VerticalAlignment="Center"
+                       Text="{Binding ActiveDocument.Statistics.ReadingMinutes, StringFormat='Reading: ~{0} min'}" />
+            <TextBlock Classes="Caption"
+                       VerticalAlignment="Center"
+                       Text="UTF-8" />
+            <TextBlock Classes="Caption"
+                       VerticalAlignment="Center"
+                       Text="Markdown" />
+        </StackPanel>
+        <TextBlock Classes="Caption"
+                   VerticalAlignment="Center"
+                   Text="{Binding ActiveDocument.FilePath, FallbackValue='', TargetNullValue='New document — not saved'}"
+                   TextTrimming="LeadingCharacterEllipsis" />
+    </DockPanel>
+</UserControl>

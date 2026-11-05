@@ -1,0 +1,45 @@
+<!--
+    Replaces LiveMarkdown.Avalonia/Defaults.axaml (which is tuned for dark backgrounds only)
+    with light/dark variants that blend with the SukiUI glass cards.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=netstandard">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="BorderColor">#2EFFFFFF</Color>
+            <Color x:Key="ForegroundColor">#FFFFFF</Color>
+            <Color x:Key="CardBackgroundColor">#0DFFFFFF</Color>
+            <Color x:Key="SecondaryCardBackgroundColor">#33000000</Color>
+            <Color x:Key="CodeInlineColor">#F2B36D</Color>
+            <Color x:Key="QuoteBorderColor">#7AA2F7</Color>
+            <SolidColorBrush x:Key="MarkdownForegroundBrush" Color="#E6E8EE" />
+            <SolidColorBrush x:Key="MarkdownLinkBrush" Color="#7AB8FF" />
+            <SolidColorBrush x:Key="MarkdownAccentBrush" Color="#5B8DEF" />
+            <SolidColorBrush x:Key="MarkdownQuoteBackgroundBrush" Color="#1A5B8DEF" />
+            <SolidColorBrush x:Key="MarkdownHighlightBrush" Color="#66B8860B" />
+            <SolidColorBrush x:Key="MarkdownSelectionBrush" Color="#805B8DEF" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="BorderColor">#1F000000</Color>
+            <Color x:Key="ForegroundColor">#FFFFFF</Color>
+            <Color x:Key="CardBackgroundColor">#08000000</Color>
+            <Color x:Key="SecondaryCardBackgroundColor">#0C000000</Color>
+            <Color x:Key="CodeInlineColor">#C2185B</Color>
+            <Color x:Key="QuoteBorderColor">#3B82F6</Color>
+            <SolidColorBrush x:Key="MarkdownForegroundBrush" Color="#1F2328" />
+            <SolidColorBrush x:Key="MarkdownLinkBrush" Color="#1D6FE0" />
+            <SolidColorBrush x:Key="MarkdownAccentBrush" Color="#3B82F6" />
+            <SolidColorBrush x:Key="MarkdownQuoteBackgroundBrush" Color="#123B82F6" />
+            <SolidColorBrush x:Key="MarkdownHighlightBrush" Color="#80FFE066" />
+            <SolidColorBrush x:Key="MarkdownSelectionBrush" Color="#663B82F6" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <system:Double x:Key="FontSizeS">13</system:Double>
+    <system:Double x:Key="FontSizeM">15</system:Double>
+    <system:Double x:Key="FontSizeL">17</system:Double>
+    <system:Double x:Key="FontSizeXl">20</system:Double>
+    <system:Double x:Key="FontSize2Xl">24</system:Double>
+    <system:Double x:Key="FontSize3Xl">30</system:Double>
+</ResourceDictionary>

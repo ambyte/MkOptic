@@ -1,0 +1,100 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia">
+
+    <Style Selector="md|MarkdownRenderer">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource MarkdownForegroundBrush}" />
+
+        <Style Selector="^ md|MarkdownTextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI, Inter, Helvetica Neue, Arial, sans-serif" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource MarkdownSelectionBrush}" />
+        </Style>
+
+        <Style Selector="^ Border.Heading1Block">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="0,0,0,4" />
+            <Setter Property="Margin" Value="0,4,0,8" />
+        </Style>
+        <Style Selector="^ Border.Heading2Block">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Padding" Value="0,0,0,2" />
+            <Setter Property="Margin" Value="0,14,0,6" />
+        </Style>
+        <Style Selector="^ Border.Heading3Block">
+            <Setter Property="Margin" Value="0,10,0,4" />
+        </Style>
+
+        <Style Selector="^ md|Link">
+            <Setter Property="Foreground" Value="{DynamicResource MarkdownLinkBrush}" />
+            <Style Selector="^:clicked">
+                <Setter Property="Foreground" Value="{DynamicResource MarkdownLinkBrush}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^ Span.Emphasis">
+            <Style Selector="^.Subscript">
+                <Setter Property="BaselineAlignment" Value="Subscript" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style Selector="^.Superscript">
+                <Setter Property="BaselineAlignment" Value="Superscript" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style Selector="^.Underline">
+                <Setter Property="TextDecorations" Value="Underline" />
+            </Style>
+            <Style Selector="^.Highlight">
+                <Setter Property="Background" Value="{DynamicResource MarkdownHighlightBrush}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^ md|CodeInline">
+            <Setter Property="Padding" Value="4,1" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace" />
+        </Style>
+
+        <Style Selector="^ md|CodeBlock">
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace" />
+            <Setter Property="Margin" Value="0,6" />
+        </Style>
+
+        <Style Selector="^ Border.QuoteBlock">
+            <Setter Property="BorderBrush" Value="{DynamicResource MarkdownAccentBrush}" />
+            <Setter Property="BorderThickness" Value="4,0,0,0" />
+            <Setter Property="Background" Value="{DynamicResource MarkdownQuoteBackgroundBrush}" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="CornerRadius" Value="0,6,6,0" />
+        </Style>
+
+        <Style Selector="^ Border.Table">
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,6" />
+        </Style>
+        <Style Selector="^ Border.TableCell">
+            <Setter Property="Padding" Value="0,5,18,5" />
+        </Style>
+
+        <Style Selector="^ CheckBox.TaskList:checked /template/ Border#Border">
+            <Setter Property="Background" Value="{DynamicResource MarkdownAccentBrush}" />
+        </Style>
+
+        <Style Selector="^ :is(Panel).MathBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,8" />
+        </Style>
+        <Style Selector="^ md|MarkdownTextBlock.MathBlock">
+            <Setter Property="FontSize" Value="18" />
+        </Style>
+        <Style Selector="^ md|MarkdownTextBlock.Math.Error">
+            <Setter Property="Foreground" Value="#E5484D" />
+        </Style>
+        <Style Selector="^ md|MarkdownTextBlock.MathBlock.Error">
+            <Setter Property="Foreground" Value="#E5484D" />
+        </Style>
+    </Style>
+</Styles>

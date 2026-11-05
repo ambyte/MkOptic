@@ -1,0 +1,25 @@
+<Application x:Class="MkOptic.App"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
+             xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             Name="MkOptic"
+             RequestedThemeVariant="Dark">
+
+    <Application.Styles>
+        <suki:SukiTheme Locale="ru-RU" ThemeColor="Blue" />
+        <StyleInclude Source="avares://AvaloniaEdit/Themes/Simple/AvaloniaEdit.xaml" />
+        <StyleInclude Source="avares://LiveMarkdown.Avalonia/Styles.axaml" />
+        <mi:MaterialIconStyles />
+        <StyleInclude Source="/Styles/AppStyles.axaml" />
+        <StyleInclude Source="/Styles/MarkdownStyles.axaml" />
+    </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Styles/MarkdownPalette.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
