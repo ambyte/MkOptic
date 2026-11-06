@@ -1,30 +1,32 @@
-﻿# MkOptic
+﻿# 📝 MkOptic
+
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white) ![Avalonia](https://img.shields.io/badge/UI-Avalonia-8B44AC) ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2ea44f) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on the left, see the result on the right.
 
 ![MkOptic](docs/mkoptic.png)
 
-## What it can do
+## ✨ What it can do
 
-- **Edit and preview side by side.** Three modes: *Source*, *Split* and *Preview* (`Ctrl+1` / `Ctrl+2` / `Ctrl+3`). Both panes scroll together.
-- **Many files at once.** Open documents are listed in a side panel; unsaved ones are marked. Drag files into the window to open them.
-- **Rich Markdown.** Tables, task lists, quotes, code blocks with syntax highlighting, images, and math formulas (`$a^2 + b^2 = c^2$`).
-- **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
-- **Find and replace** (`Ctrl+F` / `Ctrl+H`), zoom (`Ctrl+=` / `Ctrl+-`), live word count and reading time.
-- **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
-- **Links that work.** Web links open in your browser, links to other `.md` files open in a new tab.
-- **Light and dark themes** with a choice of accent color.
+- 🖊️ **Edit and preview side by side.** Three modes: *Source*, *Split* and *Preview* (`Ctrl+1` / `Ctrl+2` / `Ctrl+3`). Both panes scroll together.
+- 📂 **Many files at once.** Open documents are listed in a side panel; unsaved ones are marked. Drag files into the window to open them.
+- 🧮 **Rich Markdown.** Tables, task lists, quotes, code blocks with syntax highlighting, images, and math formulas (`$a^2 + b^2 = c^2$`).
+- 🛠️ **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
+- 🔍 **Find and replace** (`Ctrl+F` / `Ctrl+H`), zoom (`Ctrl+=` / `Ctrl+-`), live word count and reading time.
+- 💾 **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
+- 🔗 **Links that work.** Web links open in your browser, links to other `.md` files open in a new tab.
+- 🎨 **Light and dark themes** with a choice of accent color.
 
-## Download
+## 📥 Download
 
 Get the latest build from the [Releases](https://github.com/ambyte/MkOptic/releases) page:
 
 | System | Package |
 | --- | --- |
-| Windows | `*-win-x64-setup.exe` installer, or `*-win-x64-portable.exe` (a single file, no installation) |
-| macOS | `*-macos-arm64.dmg` (Apple Silicon) or `*-macos-x64.dmg` (Intel) |
-| Linux (Debian, Ubuntu, ...) | `*.deb` |
-| Linux (Fedora, openSUSE, ...) | `*.rpm` |
+| 🪟 Windows | `*-win-x64-setup.exe` installer, or `*-win-x64-portable.exe` (a single file, no installation) |
+| 🍎 macOS | `*-macos-arm64.dmg` (Apple Silicon) or `*-macos-x64.dmg` (Intel) |
+| 🐧 Linux (Debian, Ubuntu, ...) | `*.deb` |
+| 🐧 Linux (Fedora, openSUSE, ...) | `*.rpm` |
 
 Notes:
 
@@ -32,7 +34,7 @@ Notes:
 - macOS builds are not notarized. On first launch, right-click the app and choose **Open**.
 - Windows may show a SmartScreen warning because the executable is not code-signed.
 
-### Opening `.md` files with MkOptic
+### 📄 Opening `.md` files with MkOptic
 
 - **Windows installer:** keep the "Register MkOptic for Markdown files" option checked. Then choose MkOptic in *Settings → Apps → Default apps* (Windows does not allow installers to change your default silently), or use *Open with → Choose another app* on any `.md` file and tick "Always use this app".
 - **Linux (`.deb` / `.rpm`):** MkOptic registers itself for the `text/markdown` type, so it appears in the "Open With" menu of your file manager; pick it as the default there.
@@ -41,7 +43,7 @@ Notes:
 
 You can also pass files on the command line: `MkOptic README.md notes.md`.
 
-## Settings
+## ⚙️ Settings
 
 Defaults are built into the application. To change them, put an `appsettings.json` next to the executable (Windows portable) or set environment variables with the `MKOPTIC_` prefix, for example `MKOPTIC_Editor__FontSize=16`.
 
@@ -59,7 +61,7 @@ Defaults are built into the application. To change them, put an `appsettings.jso
 
 Invalid values are reported at startup and the application exits with a clear error. `MKOPTIC_ENVIRONMENT=Development` additionally loads `appsettings.Development.json` (present in Debug builds).
 
-## Keyboard shortcuts
+## ⌨️ Keyboard shortcuts
 
 | Action | Keys |
 | --- | --- |
@@ -73,7 +75,7 @@ Invalid values are reported at startup and the application exits with a clear er
 | Next / previous document | `Ctrl+Tab` / `Ctrl+Shift+Tab` |
 | Open files panel | `Ctrl+\` |
 
-## Third-party libraries
+## 📚 Third-party libraries
 
 MkOptic is built on these open-source projects. Thank you to their authors!
 
@@ -93,19 +95,19 @@ MkOptic is built on these open-source projects. Thank you to their authors!
 
 Build and packaging tools: [Inno Setup](https://jrsoftware.org/isinfo.php) (Windows installer), [fpm](https://github.com/jordansissel/fpm) (deb and rpm).
 
-## License
+## 📜 License
 
 MkOptic is released under the [MIT License](LICENSE). Third-party components keep their own licenses listed above.
 
 ---
 
-## For developers
+## 👨‍💻 For developers
 
-### Requirements
+### 📋 Requirements
 
 - [.NET SDK 10](https://dotnet.microsoft.com/download) (version pinned in `global.json`)
 
-### Build, run and test
+### 🔨 Build, run and test
 
 ```bash
 dotnet build
@@ -118,7 +120,7 @@ On Windows, `debug.bat` restores packages, builds in Debug and runs the app with
 
 Debug builds use [HotAvalonia](https://github.com/Kira-NT/HotAvalonia) for XAML hot reload in `Minimal` mode (`HotAvaloniaMode` in `MkOptic.csproj`): only the edited file is reloaded. Other modes also reload `MainWindow`, which crashes the app because the SukiUI window hook accesses a detached visual. Restart the app after editing `MainWindow.axaml` itself.
 
-### Packaging and releases
+### 📦 Packaging and releases
 
 `.github/workflows/ci.yml` builds, tests and checks packages for known vulnerabilities on Windows, Linux and macOS for every push and pull request.
 
@@ -136,7 +138,7 @@ To build a single-file Windows executable locally:
 dotnet publish src/MkOptic -c Release -r win-x64 -p:PublishSingleFile=true -o artifacts/win
 ```
 
-### Project structure
+### 🗂️ Project structure
 
 ```text
 MkOptic.sln
@@ -159,7 +161,7 @@ MkOptic.sln
 └── .github/workflows/        # ci.yml (build + tests), release.yml (packages + GitHub release)
 ```
 
-### Architectural decisions
+### 🏛️ Architectural decisions
 
 - **MVVM + DI.** View models do not depend on windows: the file system, dialogs, notifications and themes are hidden behind interfaces (`IMarkdownFileService`, `IFileDialogService`, `IUserInteractionService`, `IThemeService`), so open, save and close scenarios are covered by unit tests.
 - **Change tracking** relies on the AvaloniaEdit undo stack (`UndoStack.IsOriginalFile`); undoing back to the saved state makes the document clean again.
@@ -170,7 +172,7 @@ MkOptic.sln
 - **Opening files from the OS.** Command-line arguments are opened on startup; macOS Finder file-open events arrive through `IActivatableLifetime`.
 - **Errors.** Expected I/O errors are logged and shown as notifications. Unhandled UI-thread exceptions are logged and shown but do not terminate the process, so unsaved documents are not lost.
 
-### Code quality
+### ✅ Code quality
 
 - Nullable reference types, `TreatWarningsAsErrors`, .NET analyzers (`AnalysisMode=Recommended`), `EnforceCodeStyleInBuild`; style is defined in `.editorconfig`.
 - Package versions are managed centrally (`Directory.Packages.props`); NuGet Audit covers direct and transitive dependencies.
