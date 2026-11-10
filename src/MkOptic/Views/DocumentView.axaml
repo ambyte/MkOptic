@@ -155,6 +155,7 @@
                             CornerRadius="14">
                 <ScrollViewer x:Name="PreviewScrollViewer" HorizontalScrollBarVisibility="Disabled">
                     <md:MarkdownRenderer x:Name="Preview"
+                                         Focusable="True"
                                          Margin="28,20"
                                          MaxWidth="960"
                                          ImageBasePath="{Binding DirectoryPath}"

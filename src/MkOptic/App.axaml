@@ -12,6 +12,7 @@
         <StyleInclude Source="avares://LiveMarkdown.Avalonia/Styles.axaml" />
         <mi:MaterialIconStyles />
         <StyleInclude Source="/Styles/AppStyles.axaml" />
+        <StyleInclude Source="/Styles/SearchStyles.axaml" />
         <StyleInclude Source="/Styles/MarkdownStyles.axaml" />
     </Application.Styles>
 

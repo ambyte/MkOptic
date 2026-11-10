@@ -23,6 +23,15 @@ public sealed class DocumentHost : Panel
     private DocumentView? _activeView;
     private bool _isAttached;
 
+    public static readonly DirectProperty<DocumentHost, DocumentView?> ActiveViewProperty =
+        AvaloniaProperty.RegisterDirect<DocumentHost, DocumentView?>(nameof(ActiveView), host => host.ActiveView);
+
+    public DocumentView? ActiveView
+    {
+        get => _activeView;
+        private set => SetAndRaise(ActiveViewProperty, ref _activeView, value);
+    }
+
     public ObservableCollection<DocumentViewModel>? Documents
     {
         get => GetValue(DocumentsProperty);
@@ -112,7 +121,7 @@ public sealed class DocumentHost : Panel
             _activeView.IsVisible = false;
         }
 
-        _activeView = null;
+        ActiveView = null;
         if (ActiveDocument is not { } active || Documents?.Contains(active) != true)
         {
             return;
@@ -125,7 +134,7 @@ public sealed class DocumentHost : Panel
             Children.Add(view);
         }
 
-        _activeView = view;
+        ActiveView = view;
         view.IsVisible = true;
     }
 
@@ -134,7 +143,7 @@ public sealed class DocumentHost : Panel
         var view = _views[document];
         if (ReferenceEquals(_activeView, view))
         {
-            _activeView = null;
+            ActiveView = null;
         }
 
         Children.Remove(view);

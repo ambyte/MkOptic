@@ -19,6 +19,7 @@ public sealed partial class MainWindow : SukiWindow
         InitializeComponent();
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
+        AddHandler(KeyDownEvent, OnSearchShortcut, RoutingStrategies.Tunnel);
     }
 
     public MainWindow(MainWindowViewModel viewModel, ISukiDialogManager dialogManager, ISukiToastManager toastManager)
@@ -33,6 +34,25 @@ public sealed partial class MainWindow : SukiWindow
     public IReadOnlyList<string> StartupFiles { get; set; } = [];
 
     private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
+
+    private void OnSearchShortcut(object? sender, KeyEventArgs e)
+    {
+        if (DocumentsHost.ActiveView is not { } view)
+        {
+            return;
+        }
+
+        if (e.Key == Key.F && e.KeyModifiers == KeyModifiers.Control)
+        {
+            SearchBar.FocusQuery();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F3 && (e.KeyModifiers == KeyModifiers.None || e.KeyModifiers == KeyModifiers.Shift))
+        {
+            view.Search.Navigate(e.KeyModifiers == KeyModifiers.Shift ? -1 : 1);
+            e.Handled = true;
+        }
+    }
 
     /// <summary>Opens files and brings the window to the front (used when the OS hands files to a running instance).</summary>
     public async Task OpenFilesAsync(IReadOnlyList<string> paths)

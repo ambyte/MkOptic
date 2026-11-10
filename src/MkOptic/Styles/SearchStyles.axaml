@@ -1,0 +1,87 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:MkOptic.Views"
+        xmlns:mi="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia">
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="FindInputBackground">#161F30</SolidColorBrush>
+                    <SolidColorBrush x:Key="FindInputBorder">#334158</SolidColorBrush>
+                    <SolidColorBrush x:Key="FindInputForeground">#E6EAF0</SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="FindInputBackground">#F5F7FA</SolidColorBrush>
+                    <SolidColorBrush x:Key="FindInputBorder">#CDD4DF</SolidColorBrush>
+                    <SolidColorBrush x:Key="FindInputForeground">#202631</SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+    <Style Selector="views|DocumentSearchBar Border.FindChrome">
+        <Setter Property="Background" Value="{DynamicResource FindInputBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FindInputBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="views|DocumentSearchBar:focus-within Border.FindChrome">
+        <Setter Property="BorderBrush" Value="{DynamicResource SukiPrimaryColor}" />
+    </Style>
+    <Style Selector="views|DocumentSearchBar Button.FindAction">
+        <Setter Property="Width" Value="24" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource FindInputForeground}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}" CornerRadius="5"
+                        BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                    <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="views|DocumentSearchBar Button.FindAction:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SukiPrimaryColor10}" />
+    </Style>
+    <Style Selector="views|DocumentSearchBar Button.FindAction:focus-visible">
+        <Setter Property="BorderBrush" Value="{DynamicResource SukiPrimaryColor}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="views|DocumentSearchBar Button.FindAction:disabled">
+        <Setter Property="Opacity" Value="0.3" />
+    </Style>
+    <Style Selector="views|DocumentSearchBar mi|MaterialIcon">
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="16" />
+    </Style>
+    <Style Selector="views|DocumentSearchBar TextBox.FindInput">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource FindInputForeground}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="views|DocumentSearchBar TextBox.FindInput:focus, views|DocumentSearchBar TextBox.FindInput:pointerover">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+</Styles>

@@ -14,7 +14,8 @@ A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on
 -  **Rich Markdown.** Tables, task lists, quotes, code blocks with syntax highlighting, images, and math formulas (`$a^2 + b^2 = c^2$`).
 - 🖼️ **SVG images and badges.** Preview local and remote SVG images.
 - ️ **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
-- 🔍 **Find and replace** (`Ctrl+F` / `Ctrl+H`), zoom (`Ctrl+=` / `Ctrl+-`), live word count and reading time.
+- 🔍 **Find in source and preview** (`Ctrl+F`) with match highlighting and navigation.
+- 🔠 **Adjustable editor font size** (`Ctrl+=` / `Ctrl+-`) and live word count.
 - 💾 **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
 - 🔗 **Links that work.** Web links open in your browser, links to other `.md` files open in a new tab.
 - 🎨 **Light and dark themes** with a choice of accent color.
@@ -75,7 +76,9 @@ Invalid values are reported at startup and the application exits with a clear er
 | Bold / italic / code / link | `Ctrl+B` / `Ctrl+I` / `Ctrl+E` / `Ctrl+K` |
 | Inline formula | `Ctrl+M` |
 | Heading 1 / 2 / 3 | `Ctrl+Alt+1` / `Ctrl+Alt+2` / `Ctrl+Alt+3` |
-| Find / replace | `Ctrl+F` / `Ctrl+H` |
+| Focus search | `Ctrl+F` (works from source, preview and the menu) |
+| Next / previous match | `F3` / `Shift+F3`; `Enter` / `Shift+Enter` while the search field has focus |
+| Clear search and return to source or preview | `Escape` while the search field has focus |
 | Next / previous document | `Ctrl+Tab` / `Ctrl+Shift+Tab` |
 | Open files panel | `Ctrl+\` |
 
@@ -172,6 +175,7 @@ MkOptic.sln
 - **Preview** is refreshed with a delay (`Debouncer`) so fast typing does not re-render on every keystroke. Time comes from `TimeProvider`, so tests use `FakeTimeProvider`.
 - **Text-based scroll synchronization.** The view maps Markdown source spans to rendered text-line positions, including nested lists, tables and code. Wrapped lines use local text anchors; blank lines and non-text regions interpolate between nearby anchors. Preview margins and editor wrapping are accounted for, horizontal offsets and the caret are preserved, and the target is clamped to its scrollable range. Synchronization pauses while the debounced preview is stale and during restoration of a document's saved scroll positions. Unit tests cover the bidirectional map, and headless UI tests verify rendered text anchors and actual scrolling in both directions.
 - **Formatting** is a pure function `MarkdownFormatter.Apply(format, text, selection) → TextEdit`; the view only applies the edit. The line-ending style (LF/CRLF) is preserved.
+- **Document search.** The persistent [search bar](src/MkOptic/Views/DocumentSearchBar.axaml) lives beside the main menu and binds to the active view exposed by [DocumentHost](src/MkOptic/Views/DocumentHost.cs). [DocumentSearch](src/MkOptic/Views/DocumentSearch.cs) owns per-view query/navigation state and shares LiveMarkdown's immutable literal search pattern between source ranges and block-local rendered search (ordinal, case-insensitive substring matching). Source highlights use an AvaloniaEdit background renderer; preview highlights use LiveMarkdown's named highlight registry and precise text-range coordinates for scrolling. No regex, option toggles or AvaloniaEdit replacement/search overlay are installed. Headless UI tests cover compact menu alignment, borderless actions, both themes, keyboard input, rendered-only matching, preview scrolling, case-insensitive Latin/Cyrillic matching, literal punctuation, content updates and document switching.
 - **Preview palette.** The default LiveMarkdown resources only suit a dark background, so they are replaced with a custom light/dark palette (`Styles/MarkdownPalette.axaml`).
 - **Preview images.** LiveMarkdown's Skia SVG decoder is registered before the bitmap decoder at startup. It detects SVG content without relying on a file extension, so remote badges such as the Shields.io badges at the top of this README render without changing their URLs.
 - **Single-file friendly.** `appsettings.json` and the sample document are embedded resources; an `appsettings.json` next to the executable is an optional override. The sample is written to the per-user data folder when opened, because the editor works with files on disk.

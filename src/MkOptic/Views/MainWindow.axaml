@@ -22,7 +22,7 @@
                  MinHeight="480"
                  WindowStartupLocation="CenterScreen"
                  BackgroundStyle="GradientSoft"
-                 IsMenuVisible="True"
+                 IsMenuVisible="False"
                  DragDrop.AllowDrop="True">
     <suki:SukiWindow.Hosts>
         <suki:SukiToastHost x:Name="ToastHost" />
@@ -78,24 +78,29 @@
                              Kind="ThemeLightDark" />
         </Button>
     </suki:SukiWindow.RightWindowTitleBarControls>
-    <suki:SukiWindow.MenuItems>
-        <views:FileMenuItem />
-        <views:ViewMenuItem />
-        <views:ThemeMenuItem />
-    </suki:SukiWindow.MenuItems>
     <Grid Margin="8,8,8,0"
-          RowDefinitions="*,Auto"
+          RowDefinitions="Auto,*,Auto"
           ColumnDefinitions="Auto,*">
-        <views:DocumentSidebarView Grid.Row="0"
+        <Grid x:Name="MenuRow" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+            <Menu x:Name="MainMenu" VerticalAlignment="Center">
+                <views:FileMenuItem />
+                <views:ViewMenuItem />
+                <views:ThemeMenuItem />
+            </Menu>
+            <views:DocumentSearchBar x:Name="SearchBar" Grid.Column="1"
+                                     DataContext="{Binding #DocumentsHost.ActiveView.Search}"
+                                     IsEnabled="{Binding #DocumentsHost.IsVisible}" />
+        </Grid>
+        <views:DocumentSidebarView Grid.Row="1"
                                    Grid.Column="0" />
-        <views:DocumentHost Grid.Row="0"
+        <views:DocumentHost x:Name="DocumentsHost" Grid.Row="1"
                             Grid.Column="1"
                             Documents="{Binding Documents}"
                             ActiveDocument="{Binding ActiveDocument}"
                             IsVisible="{Binding HasDocuments}" />
-        <views:EmptyStateView Grid.Row="0"
+        <views:EmptyStateView Grid.Row="1"
                               Grid.Column="1" />
-        <views:StatusBarView Grid.Row="1"
+        <views:StatusBarView Grid.Row="2"
                              Grid.Column="0"
                              Grid.ColumnSpan="2" />
     </Grid>

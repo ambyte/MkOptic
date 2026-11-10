@@ -8,7 +8,6 @@ using Avalonia.Styling;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
-using AvaloniaEdit.Search;
 using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
 using LiveMarkdown.Avalonia;
@@ -57,7 +56,10 @@ public sealed partial class DocumentView : UserControl
         FormatCommand = new RelayCommand<MarkdownFormat>(ApplyFormat, _ => CanFormat());
         InitializeComponent();
 
-        SearchPanel.Install(Editor);
+        Search = new DocumentSearch(Editor, Preview);
+        Editor.TextArea.GotFocus += (_, _) => Search.SetTarget(preview: false);
+        Preview.AddHandler(PointerPressedEvent, (_, _) => Search.SetTarget(preview: true), RoutingStrategies.Tunnel);
+        Preview.GotFocus += (_, _) => Search.SetTarget(preview: true);
         Editor.TextArea.Caret.PositionChanged += OnCaretPositionChanged;
         Editor.TextArea.GotFocus += OnSourceFocusChanged;
         Editor.TextArea.LostFocus += OnSourceFocusChanged;
@@ -71,6 +73,8 @@ public sealed partial class DocumentView : UserControl
     }
 
     public IRelayCommand<MarkdownFormat> FormatCommand { get; }
+
+    public DocumentSearch Search { get; }
 
     private bool CanFormat() => _viewModel?.IsSourceFocused == true && !Editor.IsReadOnly;
 
@@ -391,6 +395,7 @@ public sealed partial class DocumentView : UserControl
         EditorCard.IsVisible = mode != DocumentViewMode.Preview;
         Splitter.IsVisible = mode == DocumentViewMode.Split;
         PreviewCard.IsVisible = mode != DocumentViewMode.Editor;
+        Search?.SetMode(mode);
         UpdateSourceFocus();
     }
 
