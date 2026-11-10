@@ -5,6 +5,8 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
@@ -50,6 +52,7 @@ public sealed partial class DocumentView : UserControl
     private string? _renderedPreviewText;
     private ITextSourceVersion? _synchronizedTextVersion;
     private Window? _window;
+    private TextAnchor? _pendingOutlineTarget;
 
     public DocumentView()
     {
@@ -75,6 +78,64 @@ public sealed partial class DocumentView : UserControl
     public IRelayCommand<MarkdownFormat> FormatCommand { get; }
 
     public DocumentSearch Search { get; }
+
+    private void OnCloseOutline(object? sender, RoutedEventArgs e)
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.IsOutlineOpen = false;
+        }
+    }
+
+    private void OnOutlineSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_viewModel is null || OutlineList.SelectedItem is not DocumentHeading heading)
+        {
+            return;
+        }
+
+        var offset = _viewModel.OutlineVersion.MoveOffsetTo(Editor.Document.Version, heading.Offset);
+        _pendingOutlineTarget = Editor.Document.CreateAnchor(offset);
+        _pendingOutlineTarget.SurviveDeletion = true;
+        if (_viewModel.ViewMode != DocumentViewMode.Preview)
+        {
+            Editor.Select(offset, 0);
+            Editor.ScrollToLine(Editor.Document.GetLineByOffset(offset).LineNumber);
+            Editor.TextArea.Caret.BringCaretToView();
+            Editor.TextArea.Focus();
+        }
+
+        NavigatePreviewToHeading();
+        // Allow the same heading to be activated again after scrolling elsewhere.
+        OutlineList.SelectedItem = null;
+    }
+
+    private void NavigatePreviewToHeading()
+    {
+        if (_pendingOutlineTarget is not { IsDeleted: false } target || _viewModel is null ||
+            _renderedPreviewText != Editor.Document.Text)
+        {
+            return;
+        }
+
+        if (_viewModel.ViewMode == DocumentViewMode.Editor)
+        {
+            _pendingOutlineTarget = null;
+            return;
+        }
+
+        var block = Preview.GetVisualDescendants().OfType<MarkdownTextBlock>()
+            .Where(block => block.SourceSpan.End >= target.Offset)
+            .MinBy(block => block.SourceSpan.Start);
+        if (block?.TranslatePoint(default, PreviewScrollViewer) is { } origin)
+        {
+            var y = Math.Clamp(PreviewScrollViewer.Offset.Y + origin.Y - 12, 0,
+                Math.Max(0, PreviewScrollViewer.Extent.Height - PreviewScrollViewer.Viewport.Height));
+            _synchronizedPreviewOffset = y;
+            PreviewScrollViewer.Offset = new Vector(PreviewScrollViewer.Offset.X, y);
+            _pendingOutlineTarget = null;
+        }
+    }
 
     private bool CanFormat() => _viewModel?.IsSourceFocused == true && !Editor.IsReadOnly;
 
@@ -265,6 +326,7 @@ public sealed partial class DocumentView : UserControl
                 ? builder.ToString()
                 : null;
             _scrollMap = null;
+            Dispatcher.UIThread.Post(NavigatePreviewToHeading, DispatcherPriority.Loaded);
         }
     }
 
@@ -358,6 +420,7 @@ public sealed partial class DocumentView : UserControl
         }
 
         _viewModel = DataContext as DocumentViewModel;
+        _pendingOutlineTarget = null;
         _scrollMap = null;
         _synchronizedEditorOffset = null;
         _synchronizedPreviewOffset = null;

@@ -24,6 +24,15 @@
                         CornerRadius="14"
                         DockPanel.Dock="Top">
             <DockPanel>
+                <ToggleButton x:Name="OutlineToggle"
+                              DockPanel.Dock="Right"
+                              Margin="8,0,0,0"
+                              BorderThickness="0"
+                              IsChecked="{Binding IsOutlineOpen}"
+                              ToolTip.Tip="Show or hide table of contents"
+                              AutomationProperties.Name="Table of contents">
+                    <mi:MaterialIcon Kind="FormatListBulleted" />
+                </ToggleButton>
                 <Border Padding="3"
                         Background="{DynamicResource SukiPrimaryColor5}"
                         CornerRadius="9"
@@ -129,6 +138,7 @@
         </suki:GlassCard>
 
         <!-- Editor and preview -->
+        <Grid ColumnDefinitions="*,Auto">
         <Grid x:Name="SplitGrid" ColumnDefinitions="*,10,*">
             <suki:GlassCard x:Name="EditorCard"
                             Grid.Column="0"
@@ -163,6 +173,37 @@
                                          LinkClick="OnPreviewLinkClick" />
                 </ScrollViewer>
             </suki:GlassCard>
+        </Grid>
+        <suki:GlassCard x:Name="OutlineCard"
+                        Grid.Column="1"
+                        IsVisible="{Binding IsOutlineOpen}"
+                        Width="250"
+                        Margin="10,0,0,0"
+                        Padding="12"
+                        CornerRadius="14">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                    <TextBlock Text="Table of contents" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <Button x:Name="CloseOutlineButton" Grid.Column="1" Classes="Basic"
+                            Click="OnCloseOutline" ToolTip.Tip="Hide table of contents"
+                            AutomationProperties.Name="Hide table of contents">
+                        <mi:MaterialIcon Kind="Close" />
+                    </Button>
+                </Grid>
+                <TextBlock DockPanel.Dock="Top" Text="No headings in this document."
+                           IsVisible="{Binding !Headings.Count}" TextWrapping="Wrap" Opacity="0.6" />
+                <ListBox x:Name="OutlineList" ItemsSource="{Binding Headings}"
+                         SelectionChanged="OnOutlineSelectionChanged"
+                         Background="Transparent" AutomationProperties.Name="Document headings">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DocumentHeading">
+                            <TextBlock Text="{Binding Title}" Margin="{Binding Indentation}"
+                                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Title}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </suki:GlassCard>
         </Grid>
     </DockPanel>
 </UserControl>

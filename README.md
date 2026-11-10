@@ -15,6 +15,7 @@ A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on
 - 🖼️ **SVG images and badges.** Preview local and remote SVG images.
 - ️ **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
 - 🔍 **Find in source and preview** (`Ctrl+F`) with match highlighting and navigation.
+- 📑 **Collapsible table of contents.** Browse headings in the right panel and click to jump to any section. Updates automatically as you edit.
 - 🔠 **Shared source and preview font zoom** (`Ctrl+=` / `Ctrl+-`, `Ctrl+0` to reset), preserving preview heading and code proportions, and live word count.
 - 💾 **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
 - 🔗 **Links that work.** Web links open in your browser, links to other `.md` files open in a new tab.

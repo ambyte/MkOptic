@@ -39,6 +39,8 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
         Statistics = DocumentStatistics.Calculate(content);
 
         Document = new TextDocument(content);
+        OutlineVersion = Document.Version;
+        Headings = DocumentHeading.Parse(content);
         Document.TextChanged += OnTextChanged;
         Document.UndoStack.PropertyChanged += OnUndoStackPropertyChanged;
     }
@@ -56,6 +58,14 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     public partial string PreviewText { get; private set; }
+
+    [ObservableProperty]
+    public partial IReadOnlyList<DocumentHeading> Headings { get; private set; }
+
+    [ObservableProperty]
+    public partial bool IsOutlineOpen { get; set; }
+
+    internal ITextSourceVersion OutlineVersion { get; private set; }
 
     [ObservableProperty]
     public partial DocumentStatistics Statistics { get; private set; }
@@ -111,6 +121,8 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
     private void RefreshPreview()
     {
         var text = Document.Text;
+        OutlineVersion = Document.Version;
+        Headings = DocumentHeading.Parse(text);
         PreviewText = text;
         Statistics = DocumentStatistics.Calculate(text);
     }

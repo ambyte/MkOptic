@@ -19,6 +19,76 @@ namespace MkOptic.Tests.Preview;
 public sealed class DocumentHostTests(PreviewTestSession fixture)
 {
     [Theory(Timeout = 30000)]
+    [InlineData(DocumentViewMode.Editor)]
+    [InlineData(DocumentViewMode.Split)]
+    [InlineData(DocumentViewMode.Preview)]
+    public async Task Outline_TogglesNavigatesAndRefreshesAfterEditing(DocumentViewMode mode)
+    {
+        await fixture.Session.Dispatch(async () =>
+        {
+            using var document = CreateDocument("Outline", mode, longDocument: true);
+            var view = new DocumentView { DataContext = document };
+            var window = new Window { Width = 1200, Height = 500, Content = view };
+            window.Show();
+            try
+            {
+                await SettleAsync(window);
+                var toggle = view.FindControl<Avalonia.Controls.Primitives.ToggleButton>("OutlineToggle")!;
+                var card = view.FindControl<Control>("OutlineCard")!;
+                var list = view.FindControl<ListBox>("OutlineList")!;
+                var editor = view.FindControl<TextEditor>("Editor")!;
+                var scroll = view.FindControl<ScrollViewer>("PreviewScrollViewer")!;
+                Assert.False(card.IsVisible);
+                toggle.IsChecked = true;
+                await FlushAsync(window);
+                Assert.True(document.IsOutlineOpen);
+                Assert.True(card.IsVisible);
+                Assert.Equal(60, list.ItemCount);
+
+                var heading = document.Headings[^1];
+                list.SelectedItem = heading;
+                await FlushAsync(window);
+                if (mode != DocumentViewMode.Preview)
+                {
+                    Assert.Equal(heading.Offset, editor.CaretOffset);
+                }
+                if (mode != DocumentViewMode.Editor)
+                {
+                    Assert.True(scroll.Offset.Y > 0);
+                }
+                Assert.False(document.IsDirty);
+
+                // Source offsets must still work while a debounced outline is out of date.
+                document.Document.Insert(0, "Inserted paragraph.\n\n");
+                list.SelectedItem = heading;
+                if (mode != DocumentViewMode.Preview)
+                {
+                    Assert.Equal(heading.Offset + "Inserted paragraph.\n\n".Length, editor.CaretOffset);
+                }
+                await SettleAsync(window);
+                Assert.Equal(60, document.Headings.Count);
+                Assert.Equal(heading.Offset + "Inserted paragraph.\n\n".Length, document.Headings[^1].Offset);
+
+                view.FindControl<Button>("CloseOutlineButton")!
+                    .RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                Assert.False(document.IsOutlineOpen);
+                Assert.False(card.IsVisible);
+                Assert.False(toggle.IsChecked);
+                document.Document.Text = "No headings here.";
+                await SettleAsync(window);
+                Assert.Empty(document.Headings);
+                Assert.Equal(0, list.ItemCount);
+            }
+            finally
+            {
+                window.Close();
+            }
+
+            return true;
+        }, TestContext.Current.CancellationToken);
+    }
+
+    [Theory(Timeout = 30000)]
     [InlineData(DocumentViewMode.Split)]
     [InlineData(DocumentViewMode.Preview)]
     public async Task Zoom_ScalesRenderedTypographyAndResetsWithoutChangingContent(DocumentViewMode mode)
