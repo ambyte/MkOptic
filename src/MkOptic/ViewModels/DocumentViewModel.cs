@@ -69,11 +69,6 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial int CaretColumn { get; set; } = 1;
 
-    /// <summary>Scroll offsets remembered by the view so they survive switching between documents.</summary>
-    public Avalonia.Vector EditorScrollOffset { get; set; }
-
-    public Avalonia.Vector PreviewScrollOffset { get; set; }
-
     public string Title => FilePath is null ? _untitledName : Path.GetFileName(FilePath);
 
     public string? DirectoryPath => Path.GetDirectoryName(FilePath);

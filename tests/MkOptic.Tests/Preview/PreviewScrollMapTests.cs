@@ -14,7 +14,8 @@ using MkOptic.Views;
 
 namespace MkOptic.Tests.Preview;
 
-public sealed class PreviewScrollMapTests(PreviewTestSession fixture) : IClassFixture<PreviewTestSession>
+[Collection("Preview UI")]
+public sealed class PreviewScrollMapTests(PreviewTestSession fixture)
 {
     private static readonly string[] ExpectedBlocks = ["First paragraph.", "Quoted paragraph.", "First item", "Second item", "Cell one", "Cell two", "Final paragraph."];
 
@@ -158,6 +159,9 @@ public sealed class PreviewScrollMapTests(PreviewTestSession fixture) : IClassFi
             .UseHeadless(new AvaloniaHeadlessPlatformOptions());
     }
 }
+
+[CollectionDefinition("Preview UI")]
+public sealed class PreviewTestGroup : ICollectionFixture<PreviewTestSession>;
 
 public sealed class PreviewTestSession : IAsyncDisposable
 {

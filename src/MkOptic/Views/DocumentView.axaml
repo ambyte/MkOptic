@@ -30,7 +30,6 @@
                         DockPanel.Dock="Right">
                     <StackPanel Orientation="Horizontal" Spacing="2">
                         <RadioButton Classes="Segment"
-                                     GroupName="ViewMode"
                                      IsChecked="{Binding ViewMode, Converter={x:Static conv:EnumEqualsConverter.Instance}, ConverterParameter={x:Static docs:DocumentViewMode.Editor}}"
                                      ToolTip.Tip="Editor only (Ctrl+1)">
                             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -39,7 +38,6 @@
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Classes="Segment"
-                                     GroupName="ViewMode"
                                      IsChecked="{Binding ViewMode, Converter={x:Static conv:EnumEqualsConverter.Instance}, ConverterParameter={x:Static docs:DocumentViewMode.Split}}"
                                      ToolTip.Tip="Editor and preview (Ctrl+2)">
                             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -48,7 +46,6 @@
                             </StackPanel>
                         </RadioButton>
                         <RadioButton Classes="Segment"
-                                     GroupName="ViewMode"
                                      IsChecked="{Binding ViewMode, Converter={x:Static conv:EnumEqualsConverter.Instance}, ConverterParameter={x:Static docs:DocumentViewMode.Preview}}"
                                      ToolTip.Tip="Preview only (Ctrl+3)">
                             <StackPanel Orientation="Horizontal" Spacing="6">

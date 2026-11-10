@@ -6,7 +6,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
-using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
@@ -30,7 +29,6 @@ public sealed partial class DocumentView : UserControl
     private static readonly GridLength Star = new(1, GridUnitType.Star);
     private static readonly GridLength Collapsed = new(0);
     private static readonly GridLength SplitterWidth = new(10);
-    private static readonly TimeSpan RestoreTimeout = TimeSpan.FromMilliseconds(400);
 
     private static readonly (KeyGesture Gesture, MarkdownFormat Format)[] Shortcuts =
     [
@@ -48,10 +46,6 @@ public sealed partial class DocumentView : UserControl
     private TextMate.Installation? _textMate;
     private DocumentViewModel? _viewModel;
     private ScrollViewer? _editorScrollViewer;
-    private Vector? _pendingEditorOffset;
-    private Vector? _pendingPreviewOffset;
-    private int _restoreToken;
-    private bool _restoreSettled;
     private TextScrollMap? _scrollMap;
     private double? _synchronizedEditorOffset;
     private double? _synchronizedPreviewOffset;
@@ -91,12 +85,6 @@ public sealed partial class DocumentView : UserControl
 
     private void OnEditorScrolled(object? sender, ScrollChangedEventArgs e)
     {
-        if (HasPendingOffsets)
-        {
-            TryApplyPendingOffsets();
-            return;
-        }
-
         // Extent-only changes (content still rendering) must not move the other pane.
         if (e.OffsetDelta.Y != 0)
         {
@@ -106,23 +94,15 @@ public sealed partial class DocumentView : UserControl
 
     private void OnPreviewScrolled(object? sender, ScrollChangedEventArgs e)
     {
-        if (HasPendingOffsets)
-        {
-            TryApplyPendingOffsets();
-            return;
-        }
-
         if (e.OffsetDelta.Y != 0)
         {
             SyncScroll(fromEditor: false);
         }
     }
 
-    private bool HasPendingOffsets => _pendingEditorOffset is not null || _pendingPreviewOffset is not null;
-
     private void SyncScroll(bool fromEditor)
     {
-        if (_editorScrollViewer is null || _viewModel?.ViewMode != DocumentViewMode.Split)
+        if (!IsEffectivelyVisible || _editorScrollViewer is null || _viewModel?.ViewMode != DocumentViewMode.Split)
         {
             return;
         }
@@ -283,92 +263,6 @@ public sealed partial class DocumentView : UserControl
         base.OnDetachedFromVisualTree(e);
     }
 
-    // Runs before bindings switch to the new document, so the outgoing offsets are still intact.
-    protected override void OnDataContextBeginUpdate()
-    {
-        // Mid-restore offsets are not the user's position, so the previously saved ones are kept.
-        if (_viewModel is not null && !HasPendingOffsets)
-        {
-            _viewModel.EditorScrollOffset = _editorScrollViewer?.Offset ?? default;
-            _viewModel.PreviewScrollOffset = PreviewScrollViewer.Offset;
-        }
-
-        base.OnDataContextBeginUpdate();
-    }
-
-    private void RestoreScrollOffsets()
-    {
-        if (_viewModel is null)
-        {
-            return;
-        }
-
-        // Extents are only known after layout (the preview renders even later), so the offsets are applied
-        // as the content grows. The content stays hidden meanwhile to avoid a visible jump from the top.
-        _pendingEditorOffset = _viewModel.EditorScrollOffset;
-        _pendingPreviewOffset = _viewModel.PreviewScrollOffset;
-        _restoreToken++;
-        _restoreSettled = false;
-        SplitGrid.Opacity = 0;
-        TryApplyPendingOffsets();
-
-        var token = _restoreToken;
-        Dispatcher.UIThread.Post(() => SettleRestore(token), DispatcherPriority.Background);
-        DispatcherTimer.RunOnce(() => FinishRestore(token), RestoreTimeout);
-    }
-
-    private void TryApplyPendingOffsets()
-    {
-        if (_pendingEditorOffset is { } editorOffset && _editorScrollViewer is not null)
-        {
-            _editorScrollViewer.Offset = editorOffset;
-            if (_restoreSettled && Math.Abs(_editorScrollViewer.Offset.Y - editorOffset.Y) < 1)
-            {
-                _pendingEditorOffset = null;
-            }
-        }
-
-        if (_pendingPreviewOffset is { } previewOffset)
-        {
-            PreviewScrollViewer.Offset = previewOffset;
-            if (_restoreSettled && Math.Abs(PreviewScrollViewer.Offset.Y - previewOffset.Y) < 1)
-            {
-                _pendingPreviewOffset = null;
-            }
-        }
-
-        if (!HasPendingOffsets)
-        {
-            SplitGrid.Opacity = 1;
-        }
-    }
-
-    // Offsets reached before the new document has been bound and laid out are not final (the editor resets
-    // its scroll when the document changes), so they only count as restored once this pass has run.
-    private void SettleRestore(int token)
-    {
-        if (token == _restoreToken)
-        {
-            _restoreSettled = true;
-            TryApplyPendingOffsets();
-        }
-    }
-
-    // Gives up on offsets that never became reachable (e.g. the document shrank) and reveals the content.
-    private void FinishRestore(int token)
-    {
-        if (token != _restoreToken)
-        {
-            return;
-        }
-
-        _restoreSettled = true;
-        TryApplyPendingOffsets();
-        _pendingEditorOffset = null;
-        _pendingPreviewOffset = null;
-        SplitGrid.Opacity = 1;
-    }
-
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
@@ -389,7 +283,6 @@ public sealed partial class DocumentView : UserControl
         }
 
         ApplyViewMode();
-        RestoreScrollOffsets();
     }
 
     // Tunnel phase: the editor's own bindings (e.g. Ctrl+I = indent) would otherwise handle the keys first.

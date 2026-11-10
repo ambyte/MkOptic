@@ -83,20 +83,16 @@
         <views:ViewMenuItem />
         <views:ThemeMenuItem />
     </suki:SukiWindow.MenuItems>
-    <suki:SukiWindow.DataTemplates>
-        <DataTemplate DataType="vm:DocumentViewModel">
-            <views:DocumentView />
-        </DataTemplate>
-    </suki:SukiWindow.DataTemplates>
     <Grid Margin="8,8,8,0"
           RowDefinitions="*,Auto"
           ColumnDefinitions="Auto,*">
         <views:DocumentSidebarView Grid.Row="0"
                                    Grid.Column="0" />
-        <ContentControl Grid.Row="0"
-                        Grid.Column="1"
-                        Content="{Binding ActiveDocument}"
-                        IsVisible="{Binding HasDocuments}" />
+        <views:DocumentHost Grid.Row="0"
+                            Grid.Column="1"
+                            Documents="{Binding Documents}"
+                            ActiveDocument="{Binding ActiveDocument}"
+                            IsVisible="{Binding HasDocuments}" />
         <views:EmptyStateView Grid.Row="0"
                               Grid.Column="1" />
         <views:StatusBarView Grid.Row="1"
