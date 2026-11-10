@@ -96,6 +96,30 @@ public sealed partial class DocumentView : UserControl
         }
     }
 
+    private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(EditorSettingsViewModel.FontSize))
+        {
+            ApplyPreviewZoom();
+        }
+    }
+
+    private void ApplyPreviewZoom()
+    {
+        // Preserve the preview's typography at the default 14-point editor size.
+        // Scope LiveMarkdown's dynamic resources to this renderer, not the application UI.
+        var scale = (_viewModel?.Settings.FontSize ?? 14) / 14;
+        Preview.Resources["FontSizeS"] = 13 * scale;
+        Preview.Resources["FontSizeM"] = 15 * scale;
+        Preview.Resources["FontSizeL"] = 17 * scale;
+        Preview.Resources["FontSizeXl"] = 20 * scale;
+        Preview.Resources["FontSize2Xl"] = 24 * scale;
+        Preview.Resources["FontSize3Xl"] = 30 * scale;
+        Preview.Resources["MarkdownScriptFontSize"] = 11 * scale;
+        Preview.Resources["MarkdownMathFontSize"] = 18 * scale;
+        _scrollMap = null;
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -330,6 +354,7 @@ public sealed partial class DocumentView : UserControl
         {
             _viewModel.IsSourceFocused = false;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _viewModel.Settings.PropertyChanged -= OnSettingsPropertyChanged;
         }
 
         _viewModel = DataContext as DocumentViewModel;
@@ -340,8 +365,10 @@ public sealed partial class DocumentView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            _viewModel.Settings.PropertyChanged += OnSettingsPropertyChanged;
         }
 
+        ApplyPreviewZoom();
         ApplyViewMode();
     }
 

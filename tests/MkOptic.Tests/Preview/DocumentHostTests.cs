@@ -19,6 +19,69 @@ namespace MkOptic.Tests.Preview;
 public sealed class DocumentHostTests(PreviewTestSession fixture)
 {
     [Theory(Timeout = 30000)]
+    [InlineData(DocumentViewMode.Split)]
+    [InlineData(DocumentViewMode.Preview)]
+    public async Task Zoom_ScalesRenderedTypographyAndResetsWithoutChangingContent(DocumentViewMode mode)
+    {
+        await fixture.Session.Dispatch(async () =>
+        {
+            const string source = "# Heading\n\nParagraph.\n\n```text\ncode sample\n```\n\n> Quote.\n\n- Item\n";
+            var settings = new EditorSettingsViewModel(Microsoft.Extensions.Options.Options.Create(new EditorOptions { FontSize = 18 }));
+            using var document = new DocumentViewModel(source, null, "Zoom", mode, settings, TimeSpan.Zero, TimeProvider.System);
+            var view = new DocumentView { DataContext = document };
+            var window = new Window { Width = 1000, Height = 700, Content = view };
+            window.Show();
+            try
+            {
+                await SettleAsync(window);
+                var preview = view.FindControl<MarkdownRenderer>("Preview")!;
+                var editor = view.FindControl<TextEditor>("Editor")!;
+                var blocks = preview.GetVisualDescendants().OfType<MarkdownTextBlock>().ToArray();
+                var heading = Assert.Single(blocks, block => block.LayoutText == "Heading");
+                var paragraph = Assert.Single(blocks, block => block.LayoutText == "Paragraph.");
+                var code = Assert.Single(blocks, block => block.LayoutText.Contains("code sample", StringComparison.Ordinal));
+                var committed = preview.DocumentUpdate;
+                var toolbarFontSize = view.FindControl<StackPanel>("FormattingToolbar")!.GetValue(TextBlock.FontSizeProperty);
+
+                AssertSizes(18);
+                settings.ZoomInCommand.Execute(null);
+                await FlushAsync(window);
+                AssertSizes(19);
+                settings.ZoomOutCommand.Execute(null);
+                await FlushAsync(window);
+                AssertSizes(18);
+                settings.FontSize = 28;
+                await FlushAsync(window);
+                AssertSizes(28);
+                settings.ResetZoomCommand.Execute(null);
+                await FlushAsync(window);
+                AssertSizes(18);
+
+                Assert.Same(committed, preview.DocumentUpdate);
+                Assert.Equal(source, document.GetText());
+                Assert.False(document.IsDirty);
+                Assert.Equal(toolbarFontSize, view.FindControl<StackPanel>("FormattingToolbar")!.GetValue(TextBlock.FontSizeProperty));
+
+                void AssertSizes(double fontSize)
+                {
+                    Assert.Equal(fontSize, editor.FontSize);
+                    Assert.Equal(15 * fontSize / 14, paragraph.FontSize, precision: 6);
+                    Assert.Equal(30 * fontSize / 14, heading.FontSize, precision: 6);
+                    Assert.Equal(paragraph.FontSize, code.FontSize);
+                    Assert.Equal(11 * fontSize / 14, Assert.IsType<double>(preview.Resources["MarkdownScriptFontSize"]), precision: 6);
+                    Assert.Equal(18 * fontSize / 14, Assert.IsType<double>(preview.Resources["MarkdownMathFontSize"]), precision: 6);
+                }
+            }
+            finally
+            {
+                window.Close();
+            }
+
+            return true;
+        }, TestContext.Current.CancellationToken);
+    }
+
+    [Theory(Timeout = 30000)]
     [InlineData(DocumentViewMode.Editor)]
     [InlineData(DocumentViewMode.Split)]
     [InlineData(DocumentViewMode.Preview)]

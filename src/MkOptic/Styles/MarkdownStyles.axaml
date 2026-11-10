@@ -36,11 +36,11 @@
         <Style Selector="^ Span.Emphasis">
             <Style Selector="^.Subscript">
                 <Setter Property="BaselineAlignment" Value="Subscript" />
-                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontSize" Value="{DynamicResource MarkdownScriptFontSize}" />
             </Style>
             <Style Selector="^.Superscript">
                 <Setter Property="BaselineAlignment" Value="Superscript" />
-                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontSize" Value="{DynamicResource MarkdownScriptFontSize}" />
             </Style>
             <Style Selector="^.Underline">
                 <Setter Property="TextDecorations" Value="Underline" />
@@ -88,7 +88,7 @@
             <Setter Property="Margin" Value="0,8" />
         </Style>
         <Style Selector="^ md|MarkdownTextBlock.MathBlock">
-            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontSize" Value="{DynamicResource MarkdownMathFontSize}" />
         </Style>
         <Style Selector="^ md|MarkdownTextBlock.Math.Error">
             <Setter Property="Foreground" Value="#E5484D" />
