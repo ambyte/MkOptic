@@ -7,6 +7,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using AvaloniaEdit;
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
 using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
@@ -49,6 +52,11 @@ public sealed partial class DocumentView : UserControl
     private Vector? _pendingPreviewOffset;
     private int _restoreToken;
     private bool _restoreSettled;
+    private TextScrollMap? _scrollMap;
+    private double? _synchronizedEditorOffset;
+    private double? _synchronizedPreviewOffset;
+    private string? _renderedPreviewText;
+    private ITextSourceVersion? _synchronizedTextVersion;
 
     public DocumentView()
     {
@@ -61,12 +69,19 @@ public sealed partial class DocumentView : UserControl
 
         Editor.TemplateApplied += OnEditorTemplateApplied;
         PreviewScrollViewer.ScrollChanged += OnPreviewScrolled;
+        Preview.SizeChanged += (_, _) => _scrollMap = null;
+        Preview.PropertyChanged += OnPreviewPropertyChanged;
     }
 
     public ICommand FormatCommand { get; }
 
     private void OnEditorTemplateApplied(object? sender, TemplateAppliedEventArgs e)
     {
+        if (_editorScrollViewer is not null)
+        {
+            _editorScrollViewer.ScrollChanged -= OnEditorScrolled;
+        }
+
         if (e.NameScope.Find<ScrollViewer>("PART_ScrollViewer") is { } scrollViewer)
         {
             _editorScrollViewer = scrollViewer;
@@ -85,7 +100,7 @@ public sealed partial class DocumentView : UserControl
         // Extent-only changes (content still rendering) must not move the other pane.
         if (e.OffsetDelta.Y != 0)
         {
-            SyncScroll(_editorScrollViewer, PreviewScrollViewer);
+            SyncScroll(fromEditor: true);
         }
     }
 
@@ -99,32 +114,152 @@ public sealed partial class DocumentView : UserControl
 
         if (e.OffsetDelta.Y != 0)
         {
-            SyncScroll(PreviewScrollViewer, _editorScrollViewer);
+            SyncScroll(fromEditor: false);
         }
     }
 
     private bool HasPendingOffsets => _pendingEditorOffset is not null || _pendingPreviewOffset is not null;
 
-    // Mirrors the scroll position proportionally in split mode. The offset comparison stops feedback loops.
-    private void SyncScroll(ScrollViewer? source, ScrollViewer? target)
+    private void SyncScroll(bool fromEditor)
     {
-        if (source is null || target is null || _viewModel?.ViewMode != DocumentViewMode.Split)
+        if (_editorScrollViewer is null || _viewModel?.ViewMode != DocumentViewMode.Split)
         {
             return;
         }
 
-        var sourceRange = source.Extent.Height - source.Viewport.Height;
-        var targetRange = target.Extent.Height - target.Viewport.Height;
-        if (sourceRange <= 0 || targetRange <= 0)
+        var source = fromEditor ? _editorScrollViewer : PreviewScrollViewer;
+        var sourceY = fromEditor ? Editor.TextArea.TextView.ScrollOffset.Y : source.Offset.Y;
+        var expected = fromEditor ? _synchronizedEditorOffset : _synchronizedPreviewOffset;
+        if (fromEditor)
+        {
+            _synchronizedEditorOffset = null;
+        }
+        else
+        {
+            _synchronizedPreviewOffset = null;
+        }
+
+        // ScrollChanged can be delivered after assigning Offset, so a synchronous boolean guard
+        // is insufficient. Ignore only the expected programmatic movement, not subsequent user input.
+        if (expected is { } expectedY && Math.Abs(sourceY - expectedY) < 1)
         {
             return;
         }
 
-        var offsetY = Math.Clamp(source.Offset.Y / sourceRange, 0, 1) * targetRange;
-        if (Math.Abs(offsetY - target.Offset.Y) >= 1)
+        // The debounced preview must represent this document before its source spans can be used.
+        if (Preview.DocumentUpdate is null || _renderedPreviewText != _viewModel.PreviewText)
         {
-            target.Offset = new Vector(target.Offset.X, offsetY);
+            return;
         }
+
+        if (_synchronizedTextVersion is null || _synchronizedTextVersion.CompareAge(Editor.Document.Version) != 0)
+        {
+            if (_viewModel.PreviewText != Editor.Document.Text)
+            {
+                return;
+            }
+
+            _synchronizedTextVersion = Editor.Document.Version;
+            _scrollMap = null;
+        }
+
+        _scrollMap ??= PreviewScrollMap.Create(Preview, _viewModel.PreviewText);
+        if (_scrollMap.IsEmpty || Preview.TranslatePoint(default, PreviewScrollViewer) is not { } previewOrigin)
+        {
+            return;
+        }
+
+        var previewTop = previewOrigin.Y + PreviewScrollViewer.Offset.Y;
+        var target = fromEditor ? PreviewScrollViewer : _editorScrollViewer;
+        var offsetY = fromEditor
+            ? _scrollMap.ToPreview(GetEditorSourcePosition(sourceY)) + previewTop
+            : GetEditorOffset(_scrollMap.ToSource(sourceY - previewTop));
+        if (sourceY <= 0)
+        {
+            offsetY = 0;
+        }
+
+        offsetY = Math.Clamp(offsetY, 0, Math.Max(0, target.Extent.Height - target.Viewport.Height));
+        if (Math.Abs(offsetY - target.Offset.Y) < 0.5)
+        {
+            return;
+        }
+
+        if (fromEditor)
+        {
+            _synchronizedPreviewOffset = offsetY;
+        }
+        else
+        {
+            _synchronizedEditorOffset = offsetY;
+        }
+
+        if (fromEditor)
+        {
+            target.SetCurrentValue(ScrollViewer.OffsetProperty, new Vector(target.Offset.X, offsetY));
+        }
+        else
+        {
+            var textView = Editor.TextArea.TextView;
+            ((ILogicalScrollable)textView).Offset = new Vector(textView.ScrollOffset.X, offsetY);
+        }
+    }
+
+    private void OnPreviewPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == MarkdownRenderer.RenderedTextProjectionProperty)
+        {
+            _renderedPreviewText = Preview.MarkdownBuilder is { } builder &&
+                Preview.RenderedTextProjection is { } projection && projection.SourceVersion == builder.Version
+                ? builder.ToString()
+                : null;
+            _scrollMap = null;
+        }
+    }
+
+    private double GetEditorSourcePosition(double y)
+    {
+        var textView = Editor.TextArea.TextView;
+        var position = GetEditorPosition(y);
+
+        var top = textView.GetVisualPosition(position, VisualYPosition.LineTop).Y;
+        var bottom = textView.GetVisualPosition(position, VisualYPosition.LineBottom).Y;
+        var start = Editor.Document.GetOffset(position.Location);
+        var next = GetEditorPosition(bottom + 0.01);
+        var end = Editor.Document.GetOffset(next.Location);
+        if (end <= start)
+        {
+            end = Editor.Document.TextLength;
+        }
+        var fraction = bottom > top ? Math.Clamp((y - top) / (bottom - top), 0, 1) : 0;
+        return start + ((end - start) * fraction);
+    }
+
+    private double GetEditorOffset(double sourceOffset)
+    {
+        var document = Editor.Document;
+        sourceOffset = Math.Clamp(sourceOffset, 0, document.TextLength);
+        var position = new TextViewPosition(document.GetLocation((int)sourceOffset));
+        var textView = Editor.TextArea.TextView;
+        var top = textView.GetVisualPosition(position, VisualYPosition.LineTop).Y;
+        var bottom = textView.GetVisualPosition(position, VisualYPosition.LineBottom).Y;
+        var first = GetEditorPosition(top + 0.01);
+        var next = GetEditorPosition(bottom + 0.01);
+        var start = document.GetOffset(first.Location);
+        var end = document.GetOffset(next.Location);
+        if (end <= start)
+        {
+            end = document.TextLength;
+        }
+        var fraction = end > start ? Math.Clamp((sourceOffset - start) / (end - start), 0, 1) : 0;
+        return top + ((bottom - top) * fraction);
+    }
+
+    private TextViewPosition GetEditorPosition(double y)
+    {
+        var textView = Editor.TextArea.TextView;
+        var line = textView.GetOrConstructVisualLine(textView.GetDocumentLineByVisualTop(y));
+        return line.GetTextViewPosition(new Point(0, y), false);
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -244,6 +379,10 @@ public sealed partial class DocumentView : UserControl
         }
 
         _viewModel = DataContext as DocumentViewModel;
+        _scrollMap = null;
+        _synchronizedEditorOffset = null;
+        _synchronizedPreviewOffset = null;
+        _synchronizedTextVersion = null;
         if (_viewModel is not null)
         {
             _viewModel.PropertyChanged += OnViewModelPropertyChanged;

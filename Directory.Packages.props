@@ -54,6 +54,8 @@
         <PackageVersion Include="Microsoft.Extensions.Options"
                         Version="$(MicrosoftExtensionsVersion)" />
         <!-- Tests -->
+        <PackageVersion Include="Avalonia.Headless"
+                        Version="$(AvaloniaVersion)" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk"
                         Version="18.11.0" />
         <PackageVersion Include="xunit.v3"

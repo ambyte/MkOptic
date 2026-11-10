@@ -11,7 +11,7 @@ A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on
 - 🖊️ **Edit and preview side by side.** Three modes: *Source*, *Split* and *Preview* (`Ctrl+1` / `Ctrl+2` / `Ctrl+3`). Both panes scroll together.
 - 📂 **Many files at once.** Open documents are listed in a side panel; unsaved ones are marked. Drag files into the window to open them.
 - 🧮 **Rich Markdown.** Tables, task lists, quotes, code blocks with syntax highlighting, images, and math formulas (`$a^2 + b^2 = c^2$`).
-- 🖼️ **SVG images and badges.** Preview local and remote SVG images, including Shields.io badges with extensionless URLs. Remote images require an internet connection.
+- 🖼️ **SVG images and badges.** Preview local and remote SVG images.
 - ️ **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
 - 🔍 **Find and replace** (`Ctrl+F` / `Ctrl+H`), zoom (`Ctrl+=` / `Ctrl+-`), live word count and reading time.
 - 💾 **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
@@ -167,6 +167,7 @@ MkOptic.sln
 - **MVVM + DI.** View models do not depend on windows: the file system, dialogs, notifications and themes are hidden behind interfaces (`IMarkdownFileService`, `IFileDialogService`, `IUserInteractionService`, `IThemeService`), so open, save and close scenarios are covered by unit tests.
 - **Change tracking** relies on the AvaloniaEdit undo stack (`UndoStack.IsOriginalFile`); undoing back to the saved state makes the document clean again.
 - **Preview** is refreshed with a delay (`Debouncer`) so fast typing does not re-render on every keystroke. Time comes from `TimeProvider`, so tests use `FakeTimeProvider`.
+- **Text-based scroll synchronization.** The view maps Markdown source spans to rendered text-line positions, including nested lists, tables and code. Wrapped lines use local text anchors; blank lines and non-text regions interpolate between nearby anchors. Preview margins and editor wrapping are accounted for, horizontal offsets and the caret are preserved, and the target is clamped to its scrollable range. Synchronization pauses while the debounced preview is stale and during restoration of a document's saved scroll positions. Unit tests cover the bidirectional map, and headless UI tests verify rendered text anchors and actual scrolling in both directions.
 - **Formatting** is a pure function `MarkdownFormatter.Apply(format, text, selection) → TextEdit`; the view only applies the edit. The line-ending style (LF/CRLF) is preserved.
 - **Preview palette.** The default LiveMarkdown resources only suit a dark background, so they are replaced with a custom light/dark palette (`Styles/MarkdownPalette.axaml`).
 - **Preview images.** LiveMarkdown's Skia SVG decoder is registered before the bitmap decoder at startup. It detects SVG content without relying on a file extension, so remote badges such as the Shields.io badges at the top of this README render without changing their URLs.
