@@ -28,6 +28,8 @@
                         Version="$(LiveMarkdownVersion)" />
         <PackageVersion Include="LiveMarkdown.Avalonia.Math"
                         Version="$(LiveMarkdownVersion)" />
+        <PackageVersion Include="LiveMarkdown.Avalonia.Svg.Skia"
+                        Version="$(LiveMarkdownVersion)" />
         <PackageVersion Include="CommunityToolkit.Mvvm"
                         Version="8.4.2" />
         <!-- Infrastructure -->

@@ -39,6 +39,7 @@
         <PackageReference Include="AvaloniaEdit.TextMate" />
         <PackageReference Include="LiveMarkdown.Avalonia" />
         <PackageReference Include="LiveMarkdown.Avalonia.Math" />
+        <PackageReference Include="LiveMarkdown.Avalonia.Svg.Skia" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" />

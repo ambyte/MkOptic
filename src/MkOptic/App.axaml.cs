@@ -18,12 +18,19 @@ public sealed partial class App : Application
 
     public override void Initialize()
     {
+        ConfigureImageDecoders();
         MarkdownRenderer.ConfigurePipeline += pipeline => pipeline.UseExtendedMathematics();
         MarkdownNode.Edit(nodes => nodes
             .Register<MathInlineNode>()
             .Register<MathBlockNode>());
 
         AvaloniaXamlLoader.Load(this);
+    }
+
+    internal static void ConfigureImageDecoders()
+    {
+        // Badge URLs often have no .svg extension; let the SVG decoder inspect the image data.
+        AsyncImageLoader.DefaultDecoders = [SvgImageDecoder.Shared, DefaultBitmapDecoder.Shared];
     }
 
     public override void OnFrameworkInitializationCompleted()

@@ -11,7 +11,8 @@ A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on
 - 🖊️ **Edit and preview side by side.** Three modes: *Source*, *Split* and *Preview* (`Ctrl+1` / `Ctrl+2` / `Ctrl+3`). Both panes scroll together.
 - 📂 **Many files at once.** Open documents are listed in a side panel; unsaved ones are marked. Drag files into the window to open them.
 - 🧮 **Rich Markdown.** Tables, task lists, quotes, code blocks with syntax highlighting, images, and math formulas (`$a^2 + b^2 = c^2$`).
-- 🛠️ **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
+- 🖼️ **SVG images and badges.** Preview local and remote SVG images, including Shields.io badges with extensionless URLs. Remote images require an internet connection.
+- ️ **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
 - 🔍 **Find and replace** (`Ctrl+F` / `Ctrl+H`), zoom (`Ctrl+=` / `Ctrl+-`), live word count and reading time.
 - 💾 **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
 - 🔗 **Links that work.** Web links open in your browser, links to other `.md` files open in a new tab.
@@ -83,7 +84,7 @@ MkOptic is built on these open-source projects. Thank you to their authors!
 | --- | --- | --- |
 | [Avalonia](https://github.com/AvaloniaUI/Avalonia) | Cross-platform user interface | MIT |
 | [SukiUI](https://github.com/kikipoulet/SukiUI) | Themes, window, dialogs and notifications | MIT |
-| [LiveMarkdown.Avalonia](https://github.com/DearVa/LiveMarkdown.Avalonia) (+ `.Math`) | Markdown preview: tables, code, images, formulas | Apache-2.0 |
+| [LiveMarkdown.Avalonia](https://github.com/DearVa/LiveMarkdown.Avalonia) (+ `.Math`, `.Svg.Skia`) | Markdown preview: tables, code, bitmap/SVG images, formulas | Apache-2.0 |
 | [Markdig](https://github.com/xoofx/markdig) | Markdown parsing (via LiveMarkdown) | BSD-2-Clause |
 | [RaTeX.Net](https://github.com/Sylinko/RaTeX.Net) | Rendering of LaTeX formulas | see repository |
 | [AvaloniaEdit](https://github.com/AvaloniaUI/AvaloniaEdit) + AvaloniaEdit.TextMate | Source editor with syntax highlighting | MIT |
@@ -168,6 +169,7 @@ MkOptic.sln
 - **Preview** is refreshed with a delay (`Debouncer`) so fast typing does not re-render on every keystroke. Time comes from `TimeProvider`, so tests use `FakeTimeProvider`.
 - **Formatting** is a pure function `MarkdownFormatter.Apply(format, text, selection) → TextEdit`; the view only applies the edit. The line-ending style (LF/CRLF) is preserved.
 - **Preview palette.** The default LiveMarkdown resources only suit a dark background, so they are replaced with a custom light/dark palette (`Styles/MarkdownPalette.axaml`).
+- **Preview images.** LiveMarkdown's Skia SVG decoder is registered before the bitmap decoder at startup. It detects SVG content without relying on a file extension, so remote badges such as the Shields.io badges at the top of this README render without changing their URLs.
 - **Single-file friendly.** `appsettings.json` and the sample document are embedded resources; an `appsettings.json` next to the executable is an optional override. The sample is written to the per-user data folder when opened, because the editor works with files on disk.
 - **Opening files from the OS.** Command-line arguments are opened on startup; macOS Finder file-open events arrive through `IActivatableLifetime`.
 - **Errors.** Expected I/O errors are logged and shown as notifications. Unhandled UI-thread exceptions are logged and shown but do not terminate the process, so unsaved documents are not lost.
