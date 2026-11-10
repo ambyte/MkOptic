@@ -64,6 +64,9 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
     public partial DocumentViewMode ViewMode { get; set; }
 
     [ObservableProperty]
+    public partial bool IsSourceFocused { get; set; }
+
+    [ObservableProperty]
     public partial int CaretLine { get; set; } = 1;
 
     [ObservableProperty]

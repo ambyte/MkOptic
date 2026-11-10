@@ -15,6 +15,7 @@
                     Spacing="18"
                     IsVisible="{Binding ActiveDocument, Converter={x:Static ObjectConverters.IsNotNull}}">
             <TextBlock Classes="Caption"
+                       IsVisible="{Binding ActiveDocument.IsSourceFocused, FallbackValue=False}"
                        VerticalAlignment="Center">
                 <Run Text="Ln " />
                 <Run Text="{Binding ActiveDocument.CaretLine}" />
@@ -27,9 +28,6 @@
             <TextBlock Classes="Caption"
                        VerticalAlignment="Center"
                        Text="{Binding ActiveDocument.Statistics.Characters, StringFormat='Characters: {0}'}" />
-            <TextBlock Classes="Caption"
-                       VerticalAlignment="Center"
-                       Text="{Binding ActiveDocument.Statistics.ReadingMinutes, StringFormat='Reading: ~{0} min'}" />
             <TextBlock Classes="Caption"
                        VerticalAlignment="Center"
                        Text="UTF-8" />

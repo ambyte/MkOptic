@@ -2,11 +2,13 @@ using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using LiveMarkdown.Avalonia;
 using MkOptic.Core.Documents;
+using MkOptic.Core.Editing;
 using MkOptic.Core.Options;
 using MkOptic.ViewModels;
 using MkOptic.Views;
@@ -192,6 +194,108 @@ public sealed class DocumentHostTests(PreviewTestSession fixture)
                 host.ActiveDocument = first;
                 await FlushAsync(window);
                 Assert.True(firstView.GetVisualDescendants().OfType<RadioButton>().ElementAt(1).IsChecked);
+            }
+            finally
+            {
+                window.Close();
+            }
+
+            return true;
+        }, TestContext.Current.CancellationToken);
+    }
+
+    [Theory(Timeout = 30000)]
+    [InlineData(DocumentViewMode.Editor)]
+    [InlineData(DocumentViewMode.Split)]
+    public async Task Formatting_RequiresSourceInputFocusAndToolbarClicksPreserveIt(DocumentViewMode mode)
+    {
+        await fixture.Session.Dispatch(async () =>
+        {
+            using var document = CreateDocument("Focus", mode, longDocument: false);
+            var view = new DocumentView { DataContext = document };
+            var otherInput = new TextBox();
+            var panel = new DockPanel();
+            DockPanel.SetDock(otherInput, Dock.Bottom);
+            panel.Children.Add(otherInput);
+            panel.Children.Add(view);
+            var window = new Window { Width = 1000, Height = 500, Content = panel };
+            window.Show();
+            try
+            {
+                await SettleAsync(window);
+                var editor = view.FindControl<TextEditor>("Editor")!;
+                var toolbar = view.FindControl<StackPanel>("FormattingToolbar")!;
+                var buttons = toolbar.Children.OfType<Button>().ToArray();
+                otherInput.Focus();
+                Assert.False(document.IsSourceFocused);
+                Assert.False(view.FormatCommand.CanExecute(MarkdownFormat.Bold));
+                Assert.All(buttons, button => Assert.False(button.IsEffectivelyEnabled));
+                var original = document.GetText();
+                view.FormatCommand.Execute(MarkdownFormat.Bold);
+                Assert.Equal(original, document.GetText());
+
+                editor.TextArea.Focus();
+                Assert.True(document.IsSourceFocused);
+                Assert.All(buttons, button => Assert.True(button.IsEffectivelyEnabled));
+                editor.Select(2, 5);
+                var bold = Assert.Single(buttons, button => Equals(button.CommandParameter, MarkdownFormat.Bold));
+                Assert.False(bold.Focusable);
+                var point = bold.TranslatePoint(new Point(bold.Bounds.Width / 2, bold.Bounds.Height / 2), window)!.Value;
+                window.MouseDown(point, MouseButton.Left);
+                window.MouseUp(point, MouseButton.Left);
+                Assert.Contains("**Focus**", document.GetText(), StringComparison.Ordinal);
+                Assert.True(editor.TextArea.IsFocused);
+                Assert.True(document.IsSourceFocused);
+
+                editor.IsReadOnly = true;
+                Assert.False(view.FormatCommand.CanExecute(MarkdownFormat.Bold));
+                editor.IsReadOnly = false;
+                Assert.True(view.FormatCommand.CanExecute(MarkdownFormat.Bold));
+
+                otherInput.Focus();
+                Assert.False(document.IsSourceFocused);
+                Assert.All(buttons, button => Assert.False(button.IsEffectivelyEnabled));
+                editor.TextArea.Focus();
+                document.ViewMode = DocumentViewMode.Preview;
+                Assert.False(document.IsSourceFocused);
+                Assert.False(view.FormatCommand.CanExecute(MarkdownFormat.Bold));
+                view.FormatCommand.Execute(MarkdownFormat.Bold);
+                Assert.Equal(DocumentViewMode.Preview, document.ViewMode);
+            }
+            finally
+            {
+                window.Close();
+            }
+
+            Assert.False(document.IsSourceFocused);
+            return true;
+        }, TestContext.Current.CancellationToken);
+    }
+
+    [Fact(Timeout = 30000)]
+    public async Task SwitchingDocuments_ClearsHiddenSourcesFocusState()
+    {
+        await fixture.Session.Dispatch(async () =>
+        {
+            using var first = CreateDocument("First", DocumentViewMode.Split, longDocument: false);
+            using var second = CreateDocument("Second", DocumentViewMode.Preview, longDocument: false);
+            var host = new DocumentHost
+            {
+                Documents = new ObservableCollection<DocumentViewModel> { first, second },
+                ActiveDocument = first,
+            };
+            var window = new Window { Width = 1000, Height = 500, Content = host };
+            window.Show();
+            try
+            {
+                await SettleAsync(window);
+                var view = Assert.IsType<DocumentView>(Assert.Single(host.Children));
+                view.FindControl<TextEditor>("Editor")!.TextArea.Focus();
+                Assert.True(first.IsSourceFocused);
+                host.ActiveDocument = second;
+                Assert.False(first.IsSourceFocused);
+                Assert.False(second.IsSourceFocused);
+                Assert.False(view.FormatCommand.CanExecute(MarkdownFormat.Bold));
             }
             finally
             {

@@ -63,6 +63,7 @@
                         <StackPanel.Styles>
                             <Style Selector="Button.Tool">
                                 <Setter Property="Command" Value="{Binding $parent[views:DocumentView].FormatCommand}" />
+                                <Setter Property="Focusable" Value="False" />
                             </Style>
                         </StackPanel.Styles>
                         <Button Classes="Basic Tool" CommandParameter="{x:Static editing:MarkdownFormat.Heading1}" ToolTip.Tip="Heading 1 (Ctrl+Alt+1)">

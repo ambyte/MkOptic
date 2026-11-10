@@ -10,7 +10,6 @@ public sealed class DocumentStatisticsTests
         var statistics = DocumentStatistics.Calculate(string.Empty);
 
         Assert.Equal(new DocumentStatistics(1, 0, 0), statistics);
-        Assert.Equal(0, statistics.ReadingMinutes);
     }
 
     [Theory]
@@ -32,8 +31,8 @@ public sealed class DocumentStatisticsTests
     }
 
     [Fact]
-    public void ReadingMinutes_IsAtLeastOneForShortText()
+    public void Calculate_CountsCharactersIncludingWhitespace()
     {
-        Assert.Equal(1, DocumentStatistics.Calculate("short text").ReadingMinutes);
+        Assert.Equal(10, DocumentStatistics.Calculate("short text").Characters);
     }
 }

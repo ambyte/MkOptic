@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -51,14 +50,18 @@ public sealed partial class DocumentView : UserControl
     private double? _synchronizedPreviewOffset;
     private string? _renderedPreviewText;
     private ITextSourceVersion? _synchronizedTextVersion;
+    private Window? _window;
 
     public DocumentView()
     {
+        FormatCommand = new RelayCommand<MarkdownFormat>(ApplyFormat, _ => CanFormat());
         InitializeComponent();
-        FormatCommand = new RelayCommand<MarkdownFormat>(ApplyFormat);
 
         SearchPanel.Install(Editor);
         Editor.TextArea.Caret.PositionChanged += OnCaretPositionChanged;
+        Editor.TextArea.GotFocus += OnSourceFocusChanged;
+        Editor.TextArea.LostFocus += OnSourceFocusChanged;
+        Editor.PropertyChanged += OnEditorPropertyChanged;
         RegisterShortcuts();
 
         Editor.TemplateApplied += OnEditorTemplateApplied;
@@ -67,7 +70,47 @@ public sealed partial class DocumentView : UserControl
         Preview.PropertyChanged += OnPreviewPropertyChanged;
     }
 
-    public ICommand FormatCommand { get; }
+    public IRelayCommand<MarkdownFormat> FormatCommand { get; }
+
+    private bool CanFormat() => _viewModel?.IsSourceFocused == true && !Editor.IsReadOnly;
+
+    private void OnSourceFocusChanged(object? sender, RoutedEventArgs e) => UpdateSourceFocus();
+
+    private void OnEditorPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == TextEditor.IsReadOnlyProperty)
+        {
+            FormatCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private void OnWindowPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == Window.IsActiveProperty)
+        {
+            UpdateSourceFocus();
+        }
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == IsVisibleProperty && _viewModel is not null)
+        {
+            UpdateSourceFocus();
+        }
+    }
+
+    private void UpdateSourceFocus()
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.IsSourceFocused = IsEffectivelyVisible && EditorCard.IsVisible &&
+                Editor.TextArea.IsFocused && _window?.IsActive == true;
+        }
+
+        FormatCommand.NotifyCanExecuteChanged();
+    }
 
     private void OnEditorTemplateApplied(object? sender, TemplateAppliedEventArgs e)
     {
@@ -245,6 +288,12 @@ public sealed partial class DocumentView : UserControl
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        _window = TopLevel.GetTopLevel(this) as Window;
+        if (_window is not null)
+        {
+            _window.PropertyChanged += OnWindowPropertyChanged;
+        }
+        UpdateSourceFocus();
         if (_textMate is null)
         {
             _textMate = Editor.InstallTextMate(_registryOptions);
@@ -257,6 +306,12 @@ public sealed partial class DocumentView : UserControl
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        if (_window is not null)
+        {
+            _window.PropertyChanged -= OnWindowPropertyChanged;
+            _window = null;
+        }
+        UpdateSourceFocus();
         ActualThemeVariantChanged -= OnActualThemeVariantChanged;
         _textMate?.Dispose();
         _textMate = null;
@@ -269,6 +324,7 @@ public sealed partial class DocumentView : UserControl
 
         if (_viewModel is not null)
         {
+            _viewModel.IsSourceFocused = false;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         }
 
@@ -290,6 +346,11 @@ public sealed partial class DocumentView : UserControl
 
     private void OnShortcutKeyDown(object? sender, KeyEventArgs e)
     {
+        if (!CanFormat())
+        {
+            return;
+        }
+
         foreach (var (gesture, format) in Shortcuts)
         {
             if (gesture.Matches(e))
@@ -303,14 +364,9 @@ public sealed partial class DocumentView : UserControl
 
     private void ApplyFormat(MarkdownFormat format)
     {
-        if (_viewModel is null || Editor.IsReadOnly)
+        if (!CanFormat())
         {
             return;
-        }
-
-        if (_viewModel.ViewMode == DocumentViewMode.Preview)
-        {
-            _viewModel.ViewMode = DocumentViewMode.Split;
         }
 
         var document = Editor.Document;
@@ -335,6 +391,7 @@ public sealed partial class DocumentView : UserControl
         EditorCard.IsVisible = mode != DocumentViewMode.Preview;
         Splitter.IsVisible = mode == DocumentViewMode.Split;
         PreviewCard.IsVisible = mode != DocumentViewMode.Editor;
+        UpdateSourceFocus();
     }
 
     private void ApplyColorTheme()
