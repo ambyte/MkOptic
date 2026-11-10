@@ -37,10 +37,16 @@ public sealed partial class MainWindow : SukiWindow
     /// <summary>Opens files and brings the window to the front (used when the OS hands files to a running instance).</summary>
     public async Task OpenFilesAsync(IReadOnlyList<string> paths)
     {
+        Show();
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
         if (ViewModel is { } viewModel)
         {
             await viewModel.OpenFilesAsync(paths);
-            Activate();
         }
     }
 

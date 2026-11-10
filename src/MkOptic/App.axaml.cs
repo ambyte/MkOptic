@@ -16,6 +16,8 @@ public sealed partial class App : Application
     private ServiceProvider? _services;
     private ILogger<App>? _logger;
 
+    internal SingleInstanceService? SingleInstance { get; set; }
+
     public override void Initialize()
     {
         ConfigureImageDecoders();
@@ -46,6 +48,15 @@ public sealed partial class App : Application
             window.StartupFiles = desktop.Args ?? [];
             desktop.MainWindow = window;
             OpenFilesActivatedByOs(window);
+            // Wait until the window is shown, including when another launch arrives during startup.
+            window.Opened += StartActivationListener;
+            void StartActivationListener(object? sender, EventArgs e)
+            {
+                window.Opened -= StartActivationListener;
+                SingleInstance?.StartListening(
+                    paths => Dispatcher.UIThread.Post(async () => await window.OpenFilesAsync(paths)), _logger);
+            }
+
             desktop.Exit += (_, _) => _services.Dispose();
         }
 

@@ -10,7 +10,8 @@ A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on
 
 - 🖊️ **Edit and preview side by side.** Three modes: *Source*, *Split* and *Preview* (`Ctrl+1` / `Ctrl+2` / `Ctrl+3`). Both panes scroll together.
 - 📂 **Many files at once.** Open documents are listed in a side panel; unsaved ones are marked. Drag files into the window to open them.
-- 🧮 **Rich Markdown.** Tables, task lists, quotes, code blocks with syntax highlighting, images, and math formulas (`$a^2 + b^2 = c^2$`).
+- 🪟 **One application instance per user.** Launching MkOptic again activates the existing window and restores it if minimized. Files passed to a subsequent launch open in that same window.
+-  **Rich Markdown.** Tables, task lists, quotes, code blocks with syntax highlighting, images, and math formulas (`$a^2 + b^2 = c^2$`).
 - 🖼️ **SVG images and badges.** Preview local and remote SVG images.
 - ️ **Formatting toolbar and shortcuts.** Headings, bold, italic, lists, links, images, tables and more in one click (`Ctrl+B`, `Ctrl+I`, `Ctrl+K`, ...).
 - 🔍 **Find and replace** (`Ctrl+F` / `Ctrl+H`), zoom (`Ctrl+=` / `Ctrl+-`), live word count and reading time.
@@ -43,6 +44,8 @@ Notes:
 - **Portable Windows build:** does not register anything. Use the installer if you want file associations.
 
 You can also pass files on the command line: `MkOptic README.md notes.md`.
+
+If MkOptic is already running, these files are forwarded to its existing window (relative paths are resolved from the new launch's working directory). Launching without files simply activates the window; it does not open another instance or discard unsaved documents.
 
 ## ⚙️ Settings
 
