@@ -23,7 +23,7 @@ public sealed class EditorOptions
     [MinLength(1)]
     public string[] FileExtensions { get; set; } = [];
 
-    public DocumentViewMode DefaultViewMode { get; set; } = DocumentViewMode.Split;
+    public DocumentViewMode DefaultViewMode { get; set; } = DocumentViewMode.Preview;
 
     [Range(8, 48)]
     public double FontSize { get; set; } = 14;

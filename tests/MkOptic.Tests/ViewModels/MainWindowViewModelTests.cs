@@ -29,7 +29,6 @@ public sealed class MainWindowViewModelTests
         {
             FileExtensions = [".md"],
             PreviewDelayMilliseconds = 0,
-            DefaultViewMode = DocumentViewMode.Preview,
         });
         var settings = new EditorSettingsViewModel(options);
         _viewModel = new MainWindowViewModel(
@@ -50,7 +49,7 @@ public sealed class MainWindowViewModelTests
 
         Assert.Equal(["first.md", "second.md"], _viewModel.Documents.Select(d => d.Title));
         Assert.Equal("second.md", _viewModel.ActiveDocument?.Title);
-        Assert.Equal(DocumentViewMode.Preview, _viewModel.ActiveDocument?.ViewMode);
+        Assert.All(_viewModel.Documents, document => Assert.Equal(DocumentViewMode.Preview, document.ViewMode));
     }
 
     [Fact]
