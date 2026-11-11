@@ -228,7 +228,7 @@ public sealed class UserPreferencesServiceTests : IDisposable
         var theme = new FakeThemeService();
         var viewModel = new MainWindowViewModel(new InMemoryFileService(), new FakeFileDialogService(),
             new FakeUserInteractionService(), theme, new DocumentViewModelFactory(options, settings, TimeProvider.System),
-            settings, options, NullLogger<MainWindowViewModel>.Instance);
+            settings, options, NullLogger<MainWindowViewModel>.Instance, new FakeDocumentExportService());
         return (viewModel, theme);
     }
 }

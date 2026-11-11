@@ -1,5 +1,6 @@
 using MkOptic.Core.Files;
 using MkOptic.Services;
+using MkOptic.Services.Export;
 using SukiUI.Models;
 
 namespace MkOptic.Tests.ViewModels;
@@ -44,12 +45,43 @@ internal sealed class FakeFileDialogService : IFileDialogService
 
     public int SaveDialogCalls { get; private set; }
 
+    public string? ExportLocation { get; set; }
+
+    public Func<Task<string?>>? ExportHandler { get; set; }
+
+    public List<(string FileName, DocumentExportFormat Format)> ExportRequests { get; } = [];
+
+    public Task<string?> PickExportLocationAsync(string suggestedFileName, DocumentExportFormat format)
+    {
+        ExportRequests.Add((suggestedFileName, format));
+        return ExportHandler?.Invoke() ?? Task.FromResult(ExportLocation);
+    }
+
     public Task<IReadOnlyList<string>> PickFilesToOpenAsync() => Task.FromResult(FilesToOpen);
 
     public Task<string?> PickSaveLocationAsync(string suggestedFileName)
     {
         SaveDialogCalls++;
         return Task.FromResult(SaveLocation);
+    }
+}
+
+internal sealed class FakeDocumentExportService : IDocumentExportService
+{
+    public List<(string Markdown, string Title, string? SourcePath, string DestinationPath, DocumentExportFormat Format)> Exports { get; } = [];
+
+    public Exception? Failure { get; set; }
+
+    public Task ExportAsync(string markdown, string title, string? sourcePath, string destinationPath,
+        DocumentExportFormat format, CancellationToken cancellationToken = default)
+    {
+        if (Failure is not null)
+        {
+            return Task.FromException(Failure);
+        }
+
+        Exports.Add((markdown, title, sourcePath, destinationPath, format));
+        return Task.CompletedTask;
     }
 }
 

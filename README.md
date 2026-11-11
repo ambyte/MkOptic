@@ -18,7 +18,8 @@ A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on
 - 📑 **Collapsible table of contents.** Browse headings in the right panel and click to jump to any section. Updates automatically as you edit.
 - 🔠 **Shared source and preview font zoom** (`Ctrl+=` / `Ctrl+-`, `Ctrl+0` to reset), preserving preview heading and code proportions, and live word count.
 - 💾 **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
-- 🔄 **External file changes.** Reload files changed by another program or save your version under a different name. Enable **View → Auto-reload unmodified files** (off by default) to refresh files without local edits automatically, with a brief bottom-left notification.
+- 📤 **Export to HTML and PDF.** Export the current text, including unsaved edits, from the File menu without changing the Markdown source.
+-  **External file changes.** Reload files changed by another program or save your version under a different name. Enable **View → Auto-reload unmodified files** (off by default) to refresh files without local edits automatically, with a brief bottom-left notification.
 - 🔗 **Links that work.** Web links open in your browser, links to other `.md` files open in a new tab.
 - 🎨 **Light and dark themes** with a choice of accent color.
 
@@ -49,6 +50,16 @@ Notes:
 You can also pass files on the command line: `MkOptic README.md notes.md`.
 
 If MkOptic is already running, these files are forwarded to its existing window (relative paths are resolved from the new launch's working directory). Launching without files simply activates the window; it does not open another instance or discard unsaved documents.
+
+## 📤 Exporting documents
+
+Open a document and select **File → Export to HTML…** or **File → Export to PDF…**, then choose the destination in the native save dialog. Export works for both saved and untitled documents. It uses a snapshot of the current editor text (not the delayed preview), leaves the source path and unsaved-changes state untouched, and reports success or an error with an in-app notification. Export commands are disabled when no document is active.
+
+- **HTML:** a UTF-8 page with built-in light styles, responsive layout, tables, task lists, links, and code blocks. Local PNG/JPEG/GIF/SVG/WebP images are embedded, so they do not depend on the export location. Remote HTTP(S) images remain remote and require network access when viewing the page. Relative links resolve against the original Markdown file. Raw HTML is escaped and a Content Security Policy blocks scripts and other active content.
+- **PDF:** generated locally, without a browser, printer driver, external service, or license key. Uses A4 pages with page numbers and embedded Inter fonts, including Cyrillic. Supports headings, bold/italic text, paragraphs, lists, task lists, quotes, tables, code, web links, and local PNG/JPEG images. Long documents are paginated automatically. PDF has its own print layout rather than reproducing the application's current theme or zoom.
+- **Current limitations:** formulas are exported as TeX text rather than typeset math; code has no syntax coloring. PDF uses alternative-text placeholders for remote images and image formats other than PNG/JPEG. Relative resources in untitled documents have no source directory; save the Markdown first to resolve them. Each local image is limited to 20 MB; missing or unreadable supported local images fail the export without replacing an existing destination. Network-share images are not read or embedded.
+
+The save dialog asks before overwriting an existing destination. Exports cannot overwrite an open Markdown document. Output is written to a temporary file and moved into place only after successful generation, protecting an existing export if conversion or writing fails.
 
 ## ⚙️ Settings
 
@@ -93,7 +104,8 @@ MkOptic is built on these open-source projects. Thank you to their authors!
 | [Avalonia](https://github.com/AvaloniaUI/Avalonia) | Cross-platform user interface | MIT |
 | [SukiUI](https://github.com/kikipoulet/SukiUI) | Themes, window, dialogs and notifications | MIT |
 | [LiveMarkdown.Avalonia](https://github.com/DearVa/LiveMarkdown.Avalonia) (+ `.Math`, `.Svg.Skia`) | Markdown preview: tables, code, bitmap/SVG images, formulas | Apache-2.0 |
-| [Markdig](https://github.com/xoofx/markdig) | Markdown parsing (via LiveMarkdown) | BSD-2-Clause |
+| [Markdig](https://github.com/xoofx/markdig) | Markdown parsing for preview and export | BSD-2-Clause |
+| [PDFsharp & MigraDoc 6.2.4](https://github.com/empira/PDFsharp/tree/v6.2.4) | Local PDF generation, text layout, pagination, and font embedding | MIT |
 | [RaTeX.Net](https://github.com/Sylinko/RaTeX.Net) | Rendering of LaTeX formulas | see repository |
 | [AvaloniaEdit](https://github.com/AvaloniaUI/AvaloniaEdit) + AvaloniaEdit.TextMate | Source editor with syntax highlighting | MIT |
 | [TextMateSharp](https://github.com/danipen/TextMateSharp) | Markdown grammars for highlighting | MIT |
@@ -174,6 +186,7 @@ MkOptic.sln
 
 - **MVVM + DI.** View models do not depend on windows: the file system, dialogs, notifications and themes are hidden behind interfaces (`IMarkdownFileService`, `IFileDialogService`, `IUserInteractionService`, `IThemeService`), so open, save and close scenarios are covered by unit tests.
 - **Change tracking** relies on the AvaloniaEdit undo stack (`UndoStack.IsOriginalFile`); undoing back to the saved state makes the document clean again.
+- **Document export.** `IDocumentExportService` separates export commands from conversion and disk I/O. Markdig parses the captured editor text; HTML uses its HTML renderer with embedded CSS, while MigraDoc builds a paginated PDF with the shipped Inter fonts through a dedicated font resolver (no OS-font dependency). Parsing and PDF layout run off the UI thread. Local image reads and output writes are asynchronous; final output replacement is atomic. Tests cover rich Markdown, UTF-8 and Unicode metadata, embedded fonts/images, pagination, unsafe content, source protection, cancellation, failures, command availability, and tab changes during the native dialog. PDFsharp is pinned to the MIT-licensed 6.2.4 release; its older cryptography dependency is explicitly upgraded to the serviced .NET 10 version, with NuGet Audit left enabled.
 - **Preview** is refreshed with a delay (`Debouncer`) so fast typing does not re-render on every keystroke. Time comes from `TimeProvider`, so tests use `FakeTimeProvider`.
 - **Text-based scroll synchronization.** The view maps Markdown source spans to rendered text-line positions, including nested lists, tables and code. Wrapped lines use local text anchors; blank lines and non-text regions interpolate between nearby anchors. Preview margins and editor wrapping are accounted for, horizontal offsets and the caret are preserved, and the target is clamped to its scrollable range. Synchronization pauses while the debounced preview is stale and during restoration of a document's saved scroll positions. Unit tests cover the bidirectional map, and headless UI tests verify rendered text anchors and actual scrolling in both directions.
 - **Formatting** is a pure function `MarkdownFormatter.Apply(format, text, selection) → TextEdit`; the view only applies the edit. The line-ending style (LF/CRLF) is preserved.

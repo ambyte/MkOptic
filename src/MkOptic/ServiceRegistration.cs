@@ -6,6 +6,7 @@ using MkOptic.Core.Files;
 using MkOptic.Core.Options;
 using MkOptic.Options;
 using MkOptic.Services;
+using MkOptic.Services.Export;
 using MkOptic.ViewModels;
 using MkOptic.Views;
 using SukiUI.Dialogs;
@@ -52,6 +53,7 @@ internal static class ServiceRegistration
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IMarkdownFileService, MarkdownFileService>();
+        services.AddSingleton<IDocumentExportService, MarkdownExportService>();
         services.AddSingleton<IFileDialogService, StorageProviderFileDialogService>();
         services.AddSingleton<ISukiDialogManager, SukiDialogManager>();
         services.AddSingleton<ISukiToastManager, SukiToastManager>();

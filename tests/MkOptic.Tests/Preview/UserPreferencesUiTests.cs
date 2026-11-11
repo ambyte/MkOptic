@@ -86,6 +86,6 @@ public sealed class UserPreferencesUiTests(PreviewTestSession fixture)
         var settings = new EditorSettingsViewModel(options);
         return new MainWindowViewModel(new InMemoryFileService(), new FakeFileDialogService(),
             new FakeUserInteractionService(), theme, new DocumentViewModelFactory(options, settings, TimeProvider.System),
-            settings, options, NullLogger<MainWindowViewModel>.Instance);
+            settings, options, NullLogger<MainWindowViewModel>.Instance, new FakeDocumentExportService());
     }
 }

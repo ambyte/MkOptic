@@ -8,6 +8,7 @@ using MkOptic.Core.Documents;
 using MkOptic.Core.Files;
 using MkOptic.Core.Options;
 using MkOptic.Services;
+using MkOptic.Services.Export;
 using SukiUI.Models;
 
 namespace MkOptic.ViewModels;
@@ -17,6 +18,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private const string AppName = "MkOptic";
 
     private readonly IMarkdownFileService _fileService;
+    private readonly IDocumentExportService _exportService;
     private readonly IFileDialogService _fileDialogs;
     private readonly IUserInteractionService _interaction;
     private readonly IThemeService _themeService;
@@ -34,9 +36,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         DocumentViewModelFactory documentFactory,
         EditorSettingsViewModel editorSettings,
         IOptions<EditorOptions> options,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<MainWindowViewModel> logger,
+        IDocumentExportService exportService)
     {
         _fileService = fileService;
+        _exportService = exportService;
         _fileDialogs = fileDialogs;
         _interaction = interaction;
         _themeService = themeService;
@@ -64,6 +68,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand), nameof(SaveAsCommand), nameof(CloseActiveCommand), nameof(SetViewModeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportHtmlCommand), nameof(ExportPdfCommand))]
     public partial DocumentViewModel? ActiveDocument { get; set; }
 
     [ObservableProperty]
@@ -134,6 +139,47 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand(CanExecute = nameof(HasActiveDocument))]
     private Task<bool> SaveAsAsync() => SaveDocumentAsAsync(ActiveDocument!);
+
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private Task ExportHtmlAsync() => ExportDocumentAsync(DocumentExportFormat.Html);
+
+    [RelayCommand(CanExecute = nameof(HasActiveDocument))]
+    private Task ExportPdfAsync() => ExportDocumentAsync(DocumentExportFormat.Pdf);
+
+    private async Task ExportDocumentAsync(DocumentExportFormat format)
+    {
+        // Capture the source before awaiting the native dialog: the active tab may change meanwhile.
+        if (ActiveDocument is not { } document)
+        {
+            return;
+        }
+
+        var markdown = document.GetText();
+        var title = document.Title;
+        var sourcePath = document.FilePath;
+        try
+        {
+            var path = await _fileDialogs.PickExportLocationAsync(document.SuggestedFileName, format);
+            if (path is null)
+            {
+                return;
+            }
+
+            if (Documents.Any(openDocument => openDocument.IsSameFile(path)))
+            {
+                _interaction.ShowError("Choose a different file name", "Export cannot overwrite an open Markdown document.");
+                return;
+            }
+
+            await _exportService.ExportAsync(markdown, title, sourcePath, path, format);
+            _interaction.ShowInfo("Export complete", $"{Path.GetFileName(path)} was exported successfully.");
+        }
+        catch (Exception ex) when (IsFileAccessException(ex) || ex is InvalidOperationException)
+        {
+            LogExportFailed(_logger, ex, format);
+            _interaction.ShowError("Failed to export document", DescribeFileError(ex));
+        }
+    }
 
     [RelayCommand]
     private async Task SaveAllAsync()
@@ -462,4 +508,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save file {FileName}")]
     private static partial void LogSaveFailed(ILogger logger, Exception exception, string fileName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to export document as {Format}")]
+    private static partial void LogExportFailed(ILogger logger, Exception exception, DocumentExportFormat format);
 }

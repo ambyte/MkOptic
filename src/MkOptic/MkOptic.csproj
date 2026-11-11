@@ -41,6 +41,9 @@
         <PackageReference Include="LiveMarkdown.Avalonia.Math" />
         <PackageReference Include="LiveMarkdown.Avalonia.Svg.Skia" />
         <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="Markdig" />
+        <PackageReference Include="PDFsharp-MigraDoc" />
+        <PackageReference Include="System.Security.Cryptography.Pkcs" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
         <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />

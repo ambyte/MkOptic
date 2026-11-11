@@ -144,7 +144,7 @@ public sealed class ExternalFileChangeTests(PreviewTestSession fixture)
         var settings = new EditorSettingsViewModel(options);
         var viewModel = new MainWindowViewModel(files, new FakeFileDialogService(), interaction, new FakeThemeService(),
             new DocumentViewModelFactory(options, settings, TimeProvider.System), settings, options,
-            NullLogger<MainWindowViewModel>.Instance);
+            NullLogger<MainWindowViewModel>.Instance, new FakeDocumentExportService());
         return (viewModel, files, interaction, path);
     }
 }

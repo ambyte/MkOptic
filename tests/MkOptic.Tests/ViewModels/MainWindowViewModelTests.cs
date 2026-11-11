@@ -4,6 +4,7 @@ using MkOptic.Core.Documents;
 using MkOptic.Core.Files;
 using MkOptic.Core.Options;
 using MkOptic.Services;
+using MkOptic.Services.Export;
 using MkOptic.ViewModels;
 using MsOptions = Microsoft.Extensions.Options.Options;
 
@@ -18,6 +19,7 @@ public sealed class MainWindowViewModelTests
     private readonly InMemoryFileService _files = new();
     private readonly FakeFileDialogService _dialogs = new();
     private readonly FakeUserInteractionService _interaction = new();
+    private readonly FakeDocumentExportService _export = new();
     private readonly MainWindowViewModel _viewModel;
 
     public MainWindowViewModelTests()
@@ -39,7 +41,7 @@ public sealed class MainWindowViewModelTests
             new DocumentViewModelFactory(options, settings, new FakeTimeProvider()),
             settings,
             options,
-            NullLogger<MainWindowViewModel>.Instance);
+            NullLogger<MainWindowViewModel>.Instance, _export);
     }
 
     [Fact]
@@ -589,6 +591,96 @@ public sealed class MainWindowViewModelTests
         Assert.Equal("external update", _viewModel.ActiveDocument!.GetText());
         Assert.Single(_interaction.ReloadQuestions);
         Assert.Empty(_interaction.Infos);
+    }
+
+    [Theory]
+    [InlineData(DocumentExportFormat.Html)]
+    [InlineData(DocumentExportFormat.Pdf)]
+    public async Task Export_UsesUnsavedText_WithoutChangingSavedState(DocumentExportFormat format)
+    {
+        await _viewModel.OpenFilesAsync([FirstPath]);
+        var document = _viewModel.ActiveDocument!;
+        document.Document.Text = "# Unsaved changes";
+        _dialogs.ExportLocation = Path.Combine(DocsDirectory, format == DocumentExportFormat.Html ? "first.html" : "first.pdf");
+
+        await (format == DocumentExportFormat.Html ? _viewModel.ExportHtmlCommand : _viewModel.ExportPdfCommand).ExecuteAsync(null);
+
+        var export = Assert.Single(_export.Exports);
+        Assert.Equal("# Unsaved changes", export.Markdown);
+        Assert.Equal(FirstPath, export.SourcePath);
+        Assert.Equal(format, export.Format);
+        Assert.Equal(_dialogs.ExportLocation, export.DestinationPath);
+        Assert.True(document.IsDirty);
+        Assert.Equal(FirstPath, document.FilePath);
+        Assert.Equal("# First", _files.Files[FirstPath]);
+        Assert.Single(_interaction.Infos);
+    }
+
+    [Fact]
+    public async Task Export_Cancel_DoesNotWriteOrNotify()
+    {
+        _viewModel.NewDocumentCommand.Execute(null);
+        await _viewModel.ExportHtmlCommand.ExecuteAsync(null);
+
+        Assert.Empty(_export.Exports);
+        Assert.Empty(_interaction.Infos);
+        Assert.Empty(_interaction.Errors);
+    }
+
+    [Fact]
+    public void Export_CommandsFollowActiveDocument()
+    {
+        Assert.False(_viewModel.ExportHtmlCommand.CanExecute(null));
+        Assert.False(_viewModel.ExportPdfCommand.CanExecute(null));
+        var notifications = 0;
+        _viewModel.ExportHtmlCommand.CanExecuteChanged += (_, _) => notifications++;
+        _viewModel.NewDocumentCommand.Execute(null);
+        Assert.True(_viewModel.ExportHtmlCommand.CanExecute(null));
+        Assert.True(_viewModel.ExportPdfCommand.CanExecute(null));
+        Assert.Equal(1, notifications);
+    }
+
+    [Fact]
+    public async Task Export_Failure_IsReported()
+    {
+        _viewModel.NewDocumentCommand.Execute(null);
+        _dialogs.ExportLocation = Path.Combine(DocsDirectory, "new.pdf");
+        _export.Failure = new IOException("Export failed");
+        await _viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        Assert.Single(_interaction.Errors);
+        Assert.Empty(_interaction.Infos);
+    }
+
+    [Fact]
+    public async Task Export_RejectsOverwriteOfAnyOpenSource()
+    {
+        await _viewModel.OpenFilesAsync([FirstPath, SecondPath]);
+        _dialogs.ExportLocation = FirstPath;
+        await _viewModel.ExportHtmlCommand.ExecuteAsync(null);
+
+        Assert.Empty(_export.Exports);
+        Assert.Single(_interaction.Errors);
+    }
+
+    [Fact]
+    public async Task Export_TabSwitchDuringDialog_UsesOriginalSnapshot()
+    {
+        await _viewModel.OpenFilesAsync([FirstPath]);
+        var original = _viewModel.ActiveDocument!;
+        _dialogs.ExportHandler = () =>
+        {
+            original.Document.Text = "Changed while dialog was open";
+            _viewModel.NewDocumentCommand.Execute(null);
+            return Task.FromResult<string?>(Path.Combine(DocsDirectory, "first.html"));
+        };
+
+        await _viewModel.ExportHtmlCommand.ExecuteAsync(null);
+
+        var export = Assert.Single(_export.Exports);
+        Assert.Equal("# First", export.Markdown);
+        Assert.Equal(FirstPath, export.SourcePath);
+        Assert.NotSame(original, _viewModel.ActiveDocument);
     }
 
     [Fact]

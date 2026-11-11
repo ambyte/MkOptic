@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.Options;
 using MkOptic.Core.Options;
+using MkOptic.Services.Export;
 
 namespace MkOptic.Services;
 
@@ -35,6 +36,26 @@ public sealed class StorageProviderFileDialogService(IOptions<EditorOptions> opt
             SuggestedFileName = suggestedFileName,
             DefaultExtension = options.Value.FileExtensions[0],
             FileTypeChoices = [_markdownFileType],
+            ShowOverwritePrompt = true,
+        });
+
+        return file?.TryGetLocalPath();
+    }
+
+    public async Task<string?> PickExportLocationAsync(string suggestedFileName, DocumentExportFormat format)
+    {
+        var (name, extension, mimeType) = format switch
+        {
+            DocumentExportFormat.Html => ("HTML", "html", "text/html"),
+            DocumentExportFormat.Pdf => ("PDF", "pdf", "application/pdf"),
+            _ => throw new ArgumentOutOfRangeException(nameof(format)),
+        };
+        var file = await GetStorageProvider().SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = $"Export to {name}",
+            SuggestedFileName = Path.ChangeExtension(suggestedFileName, extension),
+            DefaultExtension = extension,
+            FileTypeChoices = [new FilePickerFileType(name) { Patterns = [$"*.{extension}"], MimeTypes = [mimeType] }],
             ShowOverwritePrompt = true,
         });
 

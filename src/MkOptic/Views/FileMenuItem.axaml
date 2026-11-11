@@ -27,6 +27,11 @@
               InputGesture="Ctrl+Alt+S"
               Icon="{mi:MaterialIconExt Kind=ContentSaveAllOutline}" />
     <Separator />
+    <MenuItem Header="Export to HTML…"
+              Command="{Binding ExportHtmlCommand}" />
+    <MenuItem Header="Export to PDF…"
+              Command="{Binding ExportPdfCommand}" />
+    <Separator />
     <MenuItem Header="Close"
               Command="{Binding CloseActiveCommand}"
               InputGesture="Ctrl+W"

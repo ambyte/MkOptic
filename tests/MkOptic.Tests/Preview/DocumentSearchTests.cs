@@ -263,7 +263,7 @@ public sealed class DocumentSearchTests(PreviewTestSession fixture)
         var model = new MainWindowViewModel(new InMemoryFileService(), new FakeFileDialogService(),
             new FakeUserInteractionService(), new FakeThemeService(),
             new DocumentViewModelFactory(options, settings, TimeProvider.System), settings, options,
-            NullLogger<MainWindowViewModel>.Instance);
+            NullLogger<MainWindowViewModel>.Instance, new FakeDocumentExportService());
         model.Documents.Add(document);
         model.ActiveDocument = document;
         return new MainWindow { DataContext = model, Width = 1000, Height = 450 };
