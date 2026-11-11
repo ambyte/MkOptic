@@ -16,8 +16,12 @@ env:
 
 jobs:
   windows:
-    name: Windows (portable + installer)
+    name: Windows ${{ matrix.arch }} (portable + installer)
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
     steps:
       - uses: actions/checkout@v4
 
@@ -34,15 +38,15 @@ jobs:
 
       - name: Publish single-file executable
         run: >
-          dotnet publish src/MkOptic -c Release -r win-x64
+          dotnet publish src/MkOptic -c Release -r win-${{ matrix.arch }}
           -p:PublishSingleFile=true -p:DebugType=none -p:Version=${{ steps.version.outputs.value }}
-          -o publish/win-x64
+          -o publish/win-${{ matrix.arch }}
 
       - name: Portable build
         shell: bash
         run: |
           mkdir -p artifacts
-          cp publish/win-x64/MkOptic.exe "artifacts/MkOptic-${{ steps.version.outputs.value }}-win-x64-portable.exe"
+          cp publish/win-${{ matrix.arch }}/MkOptic.exe "artifacts/MkOptic-${{ steps.version.outputs.value }}-win-${{ matrix.arch }}-portable.exe"
 
       - name: Installer
         shell: pwsh
@@ -50,13 +54,14 @@ jobs:
           choco install innosetup --no-progress -y
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
             "/DAppVersion=${{ steps.version.outputs.value }}" `
-            "/DSourceExe=$env:GITHUB_WORKSPACE\publish\win-x64\MkOptic.exe" `
+            "/DAppArch=${{ matrix.arch }}" `
+            "/DSourceExe=$env:GITHUB_WORKSPACE\publish\win-${{ matrix.arch }}\MkOptic.exe" `
             packaging\windows\mkoptic.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - uses: actions/upload-artifact@v4
         with:
-          name: windows
+          name: win-${{ matrix.arch }}
           path: artifacts/*.exe
           if-no-files-found: error
 

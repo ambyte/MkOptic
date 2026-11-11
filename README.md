@@ -143,13 +143,13 @@ Debug builds use [HotAvalonia](https://github.com/Kira-NT/HotAvalonia) for XAML 
 
 ### 📦 Packaging and releases
 
-`.github/workflows/ci.yml` builds, tests and checks packages for known vulnerabilities on Windows, Linux and macOS for every push and pull request.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) builds, tests and checks packages for known vulnerabilities on Windows (x64 and ARM64), Linux and macOS for every push to main and every pull request. Windows ARM64 tests run natively on the `windows-11-arm` runner.
 
-`.github/workflows/release.yml` produces the distributable packages. Push a tag such as `v1.0.0` to build everything and publish a GitHub release; run the workflow manually to get the packages as build artifacts only.
+[`.github/workflows/release.yml`](.github/workflows/release.yml) produces the distributable packages. Push a tag such as `v1.0.0` to build everything and publish a GitHub release; run the workflow manually to get the packages as build artifacts only. Windows x64 and ARM64 are published as separate artifacts, each containing a portable executable and an installer; ARM64 is cross-compiled on the Windows x64 runner.
 
 | Platform | Output | How |
 | --- | --- | --- |
-| Windows | portable single `.exe`, installer `.exe` | `dotnet publish -p:PublishSingleFile=true` (native libraries and default settings are embedded), then Inno Setup (`packaging/windows/mkoptic.iss`) |
+| Windows (x64, ARM64) | portable single `.exe`, installer `.exe` for each architecture | `dotnet publish -p:PublishSingleFile=true` (native libraries and default settings are embedded), then Inno Setup ([`packaging/windows/mkoptic.iss`](packaging/windows/mkoptic.iss)) with the matching architecture |
 | macOS | `.dmg` with `MkOptic.app` (arm64, x64) | `packaging/macos/build-dmg.sh`; `Info.plist` declares the Markdown document type |
 | Linux | `.deb`, `.rpm` (x64, arm64) | `packaging/linux/build-packages.sh` (fpm); `mkoptic.desktop` declares the `text/markdown` type |
 
@@ -158,6 +158,14 @@ To build a single-file Windows executable locally:
 ```bash
 dotnet publish src/MkOptic -c Release -r win-x64 -p:PublishSingleFile=true -o artifacts/win
 ```
+
+For Windows ARM64, use:
+
+```bash
+dotnet publish src/MkOptic -c Release -r win-arm64 -p:PublishSingleFile=true -o artifacts/win-arm64
+```
+
+When compiling the installer with Inno Setup, pass `/DAppArch=arm64` and point `/DSourceExe` to the ARM64 executable. The default installer architecture remains x64; the ARM64 installer only allows installation on ARM64 Windows.
 
 ### 🗂️ Project structure
 

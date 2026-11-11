@@ -1,9 +1,19 @@
-; Inno Setup script. Build: iscc /DAppVersion=1.0.0 /DSourceExe=path\to\MkOptic.exe packaging\windows\mkoptic.iss
+; Inno Setup script. Build: iscc /DAppVersion=1.0.0 /DAppArch=arm64 /DSourceExe=path\to\MkOptic.exe packaging\windows\mkoptic.iss
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
 #ifndef SourceExe
   #define SourceExe "..\..\artifacts\win\MkOptic.exe"
+#endif
+#ifndef AppArch
+  #define AppArch "x64"
+#endif
+#if AppArch == "arm64"
+  #define SetupArchitecture "arm64"
+#elif AppArch == "x64"
+  #define SetupArchitecture "x64compatible"
+#else
+  #error Unsupported AppArch. Use x64 or arm64.
 #endif
 
 #define AppName "MkOptic"
@@ -21,11 +31,11 @@ DefaultGroupName={#AppName}
 UninstallDisplayIcon={app}\{#AppExe}
 LicenseFile=..\..\LICENSE
 OutputDir=..\..\artifacts
-OutputBaseFilename=MkOptic-{#AppVersion}-win-x64-setup
+OutputBaseFilename=MkOptic-{#AppVersion}-win-{#AppArch}-setup
 Compression=lzma2
 SolidCompression=yes
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed={#SetupArchitecture}
+ArchitecturesInstallIn64BitMode={#SetupArchitecture}
 ; Per-user install by default, the user may choose "for all users" (admin) in the dialog.
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
