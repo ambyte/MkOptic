@@ -22,9 +22,7 @@ internal sealed partial class SingleInstanceService : IDisposable
 
     public SingleInstanceService(string applicationId = "MkOptic")
     {
-        var user = Convert.ToHexString(SHA256.HashData(
-            Encoding.UTF8.GetBytes($"{Environment.UserDomainName}\\{Environment.UserName}")));
-        _pipeName = $"{applicationId}-{user}";
+        _pipeName = CreatePipeName(applicationId, $"{Environment.UserDomainName}\\{Environment.UserName}");
         // Keep the named object alive rather than owning the mutex: disposal is then thread-independent.
         _instance = new Mutex(false, _pipeName, out var createdNew);
         IsPrimary = createdNew;
@@ -45,6 +43,16 @@ internal sealed partial class SingleInstanceService : IDisposable
     }
 
     public bool IsPrimary { get; }
+
+    internal static string CreatePipeName(string applicationId, string userIdentity)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(applicationId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(userIdentity);
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"{applicationId}\0{userIdentity}"));
+        // macOS limits the entire Unix socket path to 104 bytes, including the temp directory
+        // and CoreFxPipe_ prefix. A 128-bit identifier keeps the name short without exposing user data.
+        return $"MkOptic-{Convert.ToHexString(hash.AsSpan(0, 16))}";
+    }
 
     public void StartListening(Action<string[]> activate, ILogger logger)
     {

@@ -5,6 +5,46 @@ namespace MkOptic.Tests.Services;
 
 public sealed class SingleInstanceServiceTests
 {
+    [Theory]
+    [InlineData(6)]
+    [InlineData(45)]
+    [InlineData(1024)]
+    public void PipeNameFitsMacOsSocketPathLimit(int applicationIdLength)
+    {
+        var name = SingleInstanceService.CreatePipeName(new string('я', applicationIdLength), "domain\\user");
+        const string macOsTempDirectory = "/var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/";
+        var socketPath = $"{macOsTempDirectory}CoreFxPipe_{name}";
+
+        Assert.Equal(40, name.Length);
+        Assert.InRange(System.Text.Encoding.UTF8.GetByteCount(socketPath), 1, 104);
+    }
+
+    [Fact]
+    public void PipeNameIsStableAndIsolatedByApplicationAndUser()
+    {
+        var name = SingleInstanceService.CreatePipeName("app", "user");
+
+        Assert.Equal(name, SingleInstanceService.CreatePipeName("app", "user"));
+        Assert.NotEqual(name, SingleInstanceService.CreatePipeName("other-app", "user"));
+        Assert.NotEqual(name, SingleInstanceService.CreatePipeName("app", "other-user"));
+    }
+
+    [Fact]
+    public async Task LongApplicationIdSupportsActivation()
+    {
+        var id = $"{NewApplicationId()}{new string('я', 1024)}";
+        using var primary = new SingleInstanceService(id);
+        using var secondary = new SingleInstanceService(id);
+        var received = new TaskCompletionSource<string[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        primary.StartListening(paths => received.SetResult(paths), NullLogger.Instance);
+
+        await secondary.ActivatePrimaryAsync([], TestContext.Current.CancellationToken);
+
+        Assert.True(primary.IsPrimary);
+        Assert.False(secondary.IsPrimary);
+        Assert.Empty(await received.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+    }
+
     [Fact]
     public void OnlyFirstInstanceIsPrimary()
     {

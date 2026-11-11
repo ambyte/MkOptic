@@ -203,6 +203,7 @@ MkOptic.sln
 - **Preview images.** LiveMarkdown's Skia SVG decoder is registered before the bitmap decoder at startup. It detects SVG content without relying on a file extension, so remote badges such as the Shields.io badges at the top of this README render without changing their URLs.
 - **Single-file friendly.** `appsettings.json` and the sample document are embedded resources; an `appsettings.json` next to the executable is an optional override. The sample is written to the per-user data folder when opened, because the editor works with files on disk.
 - **Opening files from the OS.** Command-line arguments are opened on startup; macOS Finder file-open events arrive through `IActivatableLifetime`.
+- **Single-instance coordination.** A per-user named mutex and named pipe forward launches to the existing window. Their shared name uses a fixed-length, 128-bit SHA-256-derived identifier covering both the application ID and user identity, keeping the pipe's Unix socket path within macOS's 104-byte limit with the standard macOS temporary-directory layout. Regression tests cover path length, deterministic application/user isolation, and activation with long Unicode application IDs.
 - **Errors.** Expected I/O errors are logged and shown as notifications. Unhandled UI-thread exceptions are logged and shown but do not terminate the process, so unsaved documents are not lost.
 
 ### ✅ Code quality
