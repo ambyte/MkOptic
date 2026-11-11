@@ -18,6 +18,7 @@ A simple, fast Markdown editor and viewer for Windows, macOS and Linux. Write on
 - 📑 **Collapsible table of contents.** Browse headings in the right panel and click to jump to any section. Updates automatically as you edit.
 - 🔠 **Shared source and preview font zoom** (`Ctrl+=` / `Ctrl+-`, `Ctrl+0` to reset), preserving preview heading and code proportions, and live word count.
 - 💾 **Safe saving.** Files are written atomically and you are asked before losing unsaved changes.
+- 🔄 **External file changes.** Reload files changed by another program or save your version under a different name. Enable **View → Auto-reload unmodified files** (off by default) to refresh files without local edits automatically, with a brief bottom-left notification.
 - 🔗 **Links that work.** Web links open in your browser, links to other `.md` files open in a new tab.
 - 🎨 **Light and dark themes** with a choice of accent color.
 

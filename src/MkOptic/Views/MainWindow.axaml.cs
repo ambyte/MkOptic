@@ -1,8 +1,11 @@
-﻿using Avalonia.Controls;
+﻿using System.ComponentModel;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using MkOptic.ViewModels;
+using MkOptic.Services;
 using SukiUI.Controls;
 using SukiUI.Dialogs;
 using SukiUI.Toasts;
@@ -12,6 +15,10 @@ namespace MkOptic.Views;
 public sealed partial class MainWindow : SukiWindow
 {
     private bool _closeConfirmed;
+    private bool _closingInProgress;
+    private readonly UserPreferencesService? _preferences;
+    private MainWindowViewModel? _observedViewModel;
+    private readonly DispatcherTimer _externalChangeTimer = new() { Interval = TimeSpan.FromSeconds(3) };
 
     /// <summary>Used by the XAML designer and runtime loader.</summary>
     public MainWindow()
@@ -20,14 +27,59 @@ public sealed partial class MainWindow : SukiWindow
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
         AddHandler(KeyDownEvent, OnSearchShortcut, RoutingStrategies.Tunnel);
+        Activated += OnDocumentActivated;
+        // AvaloniaEdit can mark focus events handled before they bubble to the host.
+        DocumentsHost.AddHandler(GotFocusEvent, OnDocumentActivated, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+        DataContextChanged += OnWindowDataContextChanged;
+        _externalChangeTimer.Tick += OnExternalChangeTimerTick;
     }
 
-    public MainWindow(MainWindowViewModel viewModel, ISukiDialogManager dialogManager, ISukiToastManager toastManager)
+    private async void OnExternalChangeTimerTick(object? sender, EventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            await viewModel.ReloadUnmodifiedDocumentsAsync();
+        }
+    }
+
+    private void OnWindowDataContextChanged(object? sender, EventArgs e)
+    {
+        if (_observedViewModel is not null)
+        {
+            _observedViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        }
+
+        _observedViewModel = ViewModel;
+        if (_observedViewModel is not null)
+        {
+            _observedViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        }
+    }
+
+    private async void OnDocumentActivated(object? sender, EventArgs e)
+    {
+        if (IsActive && ViewModel is { } viewModel)
+        {
+            await viewModel.CheckActiveDocumentForExternalChangesAsync();
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainWindowViewModel.ActiveDocument))
+        {
+            OnDocumentActivated(this, EventArgs.Empty);
+        }
+    }
+
+    public MainWindow(MainWindowViewModel viewModel, ISukiDialogManager dialogManager, ISukiToastManager toastManager,
+        UserPreferencesService preferences)
         : this()
     {
         DataContext = viewModel;
         DialogHost.Manager = dialogManager;
         ToastHost.Manager = toastManager;
+        _preferences = preferences;
     }
 
     /// <summary>Files passed on the command line, opened once the window is shown.</summary>
@@ -73,26 +125,60 @@ public sealed partial class MainWindow : SukiWindow
     protected override async void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
+        _externalChangeTimer.Start();
         if (ViewModel is { } viewModel)
         {
             await viewModel.OpenFilesAsync(StartupFiles);
         }
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        _externalChangeTimer.Stop();
+        _externalChangeTimer.Tick -= OnExternalChangeTimerTick;
+        if (_observedViewModel is not null)
+        {
+            _observedViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        }
+
+        base.OnClosed(e);
+    }
+
     protected override async void OnClosing(WindowClosingEventArgs e)
     {
         base.OnClosing(e);
-        if (_closeConfirmed || ViewModel is not { HasUnsavedChanges: true } viewModel)
+        if (_closeConfirmed || (ViewModel is not { HasUnsavedChanges: true }
+            && (_preferences is null || _preferences.FlushAsync().IsCompletedSuccessfully)))
         {
             return;
         }
 
         // Closing cannot be awaited, so cancel it and close again once the user has decided.
         e.Cancel = true;
-        if (await viewModel.ConfirmCloseAllAsync())
+        if (_closingInProgress)
         {
+            return;
+        }
+
+        _closingInProgress = true;
+        try
+        {
+            if (ViewModel is { HasUnsavedChanges: true } viewModel && !await viewModel.ConfirmCloseAllAsync())
+            {
+                return;
+            }
+
+            if (_preferences is not null)
+            {
+                await _preferences.FlushAsync();
+            }
+
             _closeConfirmed = true;
-            Close();
+            Dispatcher.UIThread.Post(Close);
+        }
+        finally
+        {
+            _closingInProgress = false;
         }
     }
 

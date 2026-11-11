@@ -29,10 +29,13 @@
               IsChecked="{Binding IsSidebarOpen, Mode=OneWay}" />
     <MenuItem Header="Word wrap"
               ToggleType="CheckBox"
-              IsChecked="{Binding EditorSettings.WordWrap}" />
+              IsChecked="{Binding EditorSettings.WordWrap, Mode=TwoWay}" />
     <MenuItem Header="Line numbers"
               ToggleType="CheckBox"
-              IsChecked="{Binding EditorSettings.ShowLineNumbers}" />
+              IsChecked="{Binding EditorSettings.ShowLineNumbers, Mode=TwoWay}" />
+    <MenuItem Header="Auto-reload unmodified files"
+              ToggleType="CheckBox"
+              IsChecked="{Binding EditorSettings.AutoReloadUnmodifiedFiles, Mode=TwoWay}" />
     <Separator />
     <MenuItem Header="Increase font size"
               Command="{Binding EditorSettings.ZoomInCommand}"

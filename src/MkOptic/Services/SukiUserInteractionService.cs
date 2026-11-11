@@ -27,6 +27,23 @@ public sealed class SukiUserInteractionService(ISukiDialogManager dialogManager,
         return shown ? await decision.Task : UnsavedChangesDecision.Cancel;
     }
 
+    public async Task<bool?> AskToReloadFileAsync(string documentTitle, bool hasLocalChanges)
+    {
+        var decision = new TaskCompletionSource<bool>();
+        var warning = hasLocalChanges ? " Reloading will discard your unsaved changes." : string.Empty;
+        var shown = dialogManager.CreateDialog()
+            .OfType(NotificationType.Warning)
+            .WithTitle("File changed outside MkOptic")
+            .WithContent($"\"{documentTitle}\" has changed on disk. Reload it?{warning} If you keep your version, save it under a different name.")
+            .WithActionButton("Reload", _ => decision.TrySetResult(true), true, "Flat", "Accent")
+            .WithActionButton("Keep mine / Save As", _ => decision.TrySetResult(false), true, "Outlined")
+            .OnDismissed(_ => decision.TrySetResult(false))
+            .TryShow();
+
+        // Another modal dialog may already be open. Do not interpret failure to show as a decision.
+        return shown ? await decision.Task : null;
+    }
+
     public void ShowError(string title, string message) =>
         ShowToast(NotificationType.Error, title, message, ErrorToastDuration);
 

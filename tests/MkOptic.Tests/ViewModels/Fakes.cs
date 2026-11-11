@@ -10,8 +10,15 @@ internal sealed class InMemoryFileService : IMarkdownFileService
 
     public Exception? ReadFailure { get; set; }
 
+    public Func<string, Task<string>>? ReadHandler { get; set; }
+
     public Task<string> ReadAsync(string path, CancellationToken cancellationToken = default)
     {
+        if (ReadHandler is not null)
+        {
+            return ReadHandler(path);
+        }
+
         if (ReadFailure is not null)
         {
             return Task.FromException<string>(ReadFailure);
@@ -56,6 +63,18 @@ internal sealed class FakeUserInteractionService : IUserInteractionService
 
     public List<string> Infos { get; } = [];
 
+    public bool ReloadDecision { get; set; }
+
+    public List<(string Title, bool HasLocalChanges)> ReloadQuestions { get; } = [];
+
+    public Func<Task<bool?>>? ReloadHandler { get; set; }
+
+    public Task<bool?> AskToReloadFileAsync(string documentTitle, bool hasLocalChanges)
+    {
+        ReloadQuestions.Add((documentTitle, hasLocalChanges));
+        return ReloadHandler?.Invoke() ?? Task.FromResult<bool?>(ReloadDecision);
+    }
+
     public Task<UnsavedChangesDecision> AskToSaveChangesAsync(string documentTitle)
     {
         AskedDocuments.Add(documentTitle);
@@ -69,17 +88,29 @@ internal sealed class FakeUserInteractionService : IUserInteractionService
 
 internal sealed class FakeThemeService : IThemeService
 {
+    public event EventHandler? AppearanceChanged;
+
+    public string AccentColorName { get; private set; } = "Blue";
+
     public bool IsDark { get; private set; } = true;
 
-    public IReadOnlyList<SukiColorTheme> ColorThemes => [];
+    public IReadOnlyList<SukiColorTheme> ColorThemes { get; } =
+        [new("Blue", Avalonia.Media.Colors.Blue, Avalonia.Media.Colors.DarkBlue),
+         new("Orange", Avalonia.Media.Colors.Orange, Avalonia.Media.Colors.DarkOrange)];
 
     public void ApplyConfiguredTheme()
     {
     }
 
-    public void ToggleBaseTheme() => IsDark = !IsDark;
+    public void ToggleBaseTheme()
+    {
+        IsDark = !IsDark;
+        AppearanceChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     public void ChangeColorTheme(SukiColorTheme theme)
     {
+        AccentColorName = theme.DisplayName;
+        AppearanceChanged?.Invoke(this, EventArgs.Empty);
     }
 }

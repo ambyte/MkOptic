@@ -24,6 +24,7 @@ public sealed partial class EditorSettingsViewModel : ObservableObject
         FontFamily = new FontFamily(value.FontFamily);
         WordWrap = value.WordWrap;
         ShowLineNumbers = value.ShowLineNumbers;
+        AutoReloadUnmodifiedFiles = value.AutoReloadUnmodifiedFiles;
     }
 
     public FontFamily FontFamily { get; }
@@ -36,6 +37,9 @@ public sealed partial class EditorSettingsViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool ShowLineNumbers { get; set; }
+
+    [ObservableProperty]
+    public partial bool AutoReloadUnmodifiedFiles { get; set; }
 
     [RelayCommand]
     private void ZoomIn() => FontSize = Math.Min(MaxFontSize, FontSize + 1);

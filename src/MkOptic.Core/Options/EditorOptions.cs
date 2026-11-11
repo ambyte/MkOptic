@@ -35,5 +35,8 @@ public sealed class EditorOptions
 
     public bool ShowLineNumbers { get; set; } = true;
 
+    /// <summary>Reload externally changed files in the background only when there are no local edits.</summary>
+    public bool AutoReloadUnmodifiedFiles { get; set; }
+
     public long MaxFileSizeBytes => MaxFileSizeMegabytes * 1024L * 1024L;
 }

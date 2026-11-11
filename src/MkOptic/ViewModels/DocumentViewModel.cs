@@ -16,6 +16,8 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
 
     private readonly string _untitledName;
     private readonly Debouncer _previewDebouncer;
+    private string _savedText;
+    private bool _requiresSaveAs;
 
     public DocumentViewModel(
         string content,
@@ -30,6 +32,7 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(untitledName);
 
         _untitledName = untitledName;
+        _savedText = content;
         _previewDebouncer = new Debouncer(previewDelay, timeProvider);
 
         Settings = settings;
@@ -88,7 +91,11 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
 
     public bool IsUntitled => FilePath is null;
 
-    public bool IsDirty => !Document.UndoStack.IsOriginalFile;
+    public bool IsDirty => _requiresSaveAs || !Document.UndoStack.IsOriginalFile;
+
+    public bool RequiresSaveAs => _requiresSaveAs;
+
+    public bool MatchesSavedText(string content) => string.Equals(_savedText, content, StringComparison.Ordinal);
 
     /// <summary>An untitled document that was never edited can be silently replaced by an opened file.</summary>
     public bool IsPristine => IsUntitled && !IsDirty && Document.TextLength == 0;
@@ -97,11 +104,39 @@ public sealed partial class DocumentViewModel : ObservableObject, IDisposable
 
     public string GetText() => Document.Text;
 
-    public void MarkSaved(string filePath)
+    public void MarkSaved(string filePath) => MarkSaved(filePath, GetText());
+
+    public void MarkSaved(string filePath, string savedText)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         FilePath = Path.GetFullPath(filePath);
-        Document.UndoStack.MarkAsOriginalFile();
+        _savedText = savedText;
+        _requiresSaveAs = false;
+        if (string.Equals(GetText(), savedText, StringComparison.Ordinal))
+        {
+            Document.UndoStack.MarkAsOriginalFile();
+        }
+        else
+        {
+            Document.UndoStack.DiscardOriginalFileMarker();
+        }
+
+        OnPropertyChanged(nameof(IsDirty));
+    }
+
+    public void RequireSaveAs()
+    {
+        _requiresSaveAs = true;
+        OnPropertyChanged(nameof(IsDirty));
+    }
+
+    public void Reload(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        Document.Text = content;
+        Document.UndoStack.ClearAll();
+        MarkSaved(FilePath!, content);
+        RefreshPreview();
     }
 
     public bool IsSameFile(string filePath) =>

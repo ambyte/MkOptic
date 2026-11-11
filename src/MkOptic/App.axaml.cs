@@ -7,6 +7,7 @@ using LiveMarkdown.Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MkOptic.Services;
+using MkOptic.ViewModels;
 using MkOptic.Views;
 
 namespace MkOptic;
@@ -42,7 +43,10 @@ public sealed partial class App : Application
             _services = ServiceRegistration.BuildServiceProvider();
             _logger = _services.GetRequiredService<ILogger<App>>();
             RegisterGlobalExceptionHandlers();
-            _services.GetRequiredService<IThemeService>().ApplyConfiguredTheme();
+            var theme = _services.GetRequiredService<IThemeService>();
+            theme.ApplyConfiguredTheme();
+            _services.GetRequiredService<UserPreferencesService>().ApplyAndTrack(
+                _services.GetRequiredService<MainWindowViewModel>(), theme);
 
             var window = _services.GetRequiredService<MainWindow>();
             window.StartupFiles = desktop.Args ?? [];

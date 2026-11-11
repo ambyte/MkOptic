@@ -25,7 +25,7 @@
                  IsMenuVisible="False"
                  DragDrop.AllowDrop="True">
     <suki:SukiWindow.Hosts>
-        <suki:SukiToastHost x:Name="ToastHost" />
+        <suki:SukiToastHost x:Name="ToastHost" Position="BottomLeft" />
         <suki:SukiDialogHost x:Name="DialogHost" />
     </suki:SukiWindow.Hosts>
     <suki:SukiWindow.KeyBindings>

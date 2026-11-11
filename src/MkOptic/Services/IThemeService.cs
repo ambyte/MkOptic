@@ -7,7 +7,11 @@ namespace MkOptic.Services;
 /// </summary>
 public interface IThemeService
 {
+    event EventHandler? AppearanceChanged;
+
     bool IsDark { get; }
+
+    string AccentColorName { get; }
 
     IReadOnlyList<SukiColorTheme> ColorThemes { get; }
 

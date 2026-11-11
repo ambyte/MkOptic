@@ -23,6 +23,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly DocumentViewModelFactory _documentFactory;
     private readonly EditorOptions _options;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private bool _checkingExternalChanges;
+    private bool _pendingFocusCheck;
 
     public MainWindowViewModel(
         IMarkdownFileService fileService,
@@ -193,7 +195,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public async Task<bool> SaveDocumentAsync(DocumentViewModel document)
     {
         ArgumentNullException.ThrowIfNull(document);
-        return document.FilePath is null
+        return document.FilePath is null || document.RequiresSaveAs
             ? await SaveDocumentAsAsync(document)
             : await WriteDocumentAsync(document, document.FilePath);
     }
@@ -212,9 +214,149 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private bool HasActiveDocument() => ActiveDocument is not null;
 
+    /// <summary>Checks the focused document against its last successfully loaded or saved contents.</summary>
+    public async Task CheckActiveDocumentForExternalChangesAsync()
+    {
+        if (_checkingExternalChanges)
+        {
+            _pendingFocusCheck = true;
+            return;
+        }
+
+        _checkingExternalChanges = true;
+        try
+        {
+            DocumentViewModel? document;
+            do
+            {
+                document = ActiveDocument;
+                if (document?.FilePath is not { } path)
+                {
+                    return;
+                }
+
+                await CheckDocumentForExternalChangesAsync(document, path);
+            }
+            while (!ReferenceEquals(ActiveDocument, document));
+        }
+        finally
+        {
+            _checkingExternalChanges = false;
+            _pendingFocusCheck = false;
+        }
+    }
+
+    /// <summary>Silently refreshes clean documents without requiring window or document focus.</summary>
+    public async Task ReloadUnmodifiedDocumentsAsync()
+    {
+        if (!EditorSettings.AutoReloadUnmodifiedFiles || _checkingExternalChanges)
+        {
+            return;
+        }
+
+        _checkingExternalChanges = true;
+        try
+        {
+            foreach (var document in Documents.ToArray())
+            {
+                if (!EditorSettings.AutoReloadUnmodifiedFiles)
+                {
+                    break;
+                }
+
+                if (!document.IsDirty && document.FilePath is { } path)
+                {
+                    await CheckDocumentForExternalChangesAsync(document, path, background: true);
+                }
+            }
+        }
+        finally
+        {
+            _checkingExternalChanges = false;
+        }
+
+        // A focus event received during asynchronous polling must not be lost.
+        if (_pendingFocusCheck)
+        {
+            _pendingFocusCheck = false;
+            await CheckActiveDocumentForExternalChangesAsync();
+        }
+    }
+
+    private async Task CheckDocumentForExternalChangesAsync(DocumentViewModel document, string path, bool background = false)
+    {
+        try
+        {
+            var version = document.Document.Version;
+            var content = await _fileService.ReadAsync(path);
+            if (!Documents.Contains(document) || (!background && !ReferenceEquals(ActiveDocument, document))
+                || !document.IsSameFile(path) || document.MatchesSavedText(content))
+            {
+                return;
+            }
+
+            var reload = EditorSettings.AutoReloadUnmodifiedFiles && !document.IsDirty;
+            var automaticReload = reload;
+            if (background && !reload)
+            {
+                return;
+            }
+
+            if (!reload)
+            {
+                var decision = await _interaction.AskToReloadFileAsync(document.Title, document.IsDirty);
+                if (decision is null)
+                {
+                    return;
+                }
+
+                reload = decision.Value;
+            }
+
+            // Do not apply a delayed response to a closed, renamed, or newly edited document.
+            if (!Documents.Contains(document) || (!background && !ReferenceEquals(ActiveDocument, document)) || !document.IsSameFile(path)
+                || !ReferenceEquals(version, document.Document.Version))
+            {
+                return;
+            }
+
+            if (reload)
+            {
+                document.Reload(content);
+                if (automaticReload)
+                {
+                    _interaction.ShowInfo("File reloaded", $"{document.Title} was updated from disk.");
+                }
+            }
+            else
+            {
+                document.RequireSaveAs();
+                await SaveDocumentAsAsync(document);
+            }
+        }
+        catch (Exception ex) when (IsFileAccessException(ex))
+        {
+            if (background)
+            {
+                // Atomic replacements and temporary locks can fail a polling read. Retry on the next tick;
+                // foreground focus checks report persistent failures without flooding the user with toasts.
+                return;
+            }
+
+            LogOpenFailed(_logger, ex, Path.GetFileName(path));
+            _interaction.ShowError("Failed to check changed file", $"{Path.GetFileName(path)}: {DescribeFileError(ex)}");
+        }
+    }
+
     private async Task<bool> SaveDocumentAsAsync(DocumentViewModel document)
     {
         var path = await _fileDialogs.PickSaveLocationAsync(document.SuggestedFileName);
+        if (path is not null && document.RequiresSaveAs && document.IsSameFile(path))
+        {
+            _interaction.ShowError("Choose a different file name", "The original file has changed on disk. Save your version under a different name to keep both versions.");
+            return false;
+        }
+
         return path is not null && await WriteDocumentAsync(document, path);
     }
 
@@ -222,8 +364,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         try
         {
-            await _fileService.WriteAsync(path, document.GetText());
-            document.MarkSaved(path);
+            var content = document.GetText();
+            await _fileService.WriteAsync(path, content);
+            document.MarkSaved(path, content);
             return true;
         }
         catch (Exception ex) when (IsFileAccessException(ex))

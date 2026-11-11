@@ -57,6 +57,8 @@ internal static class ServiceRegistration
         services.AddSingleton<ISukiToastManager, SukiToastManager>();
         services.AddSingleton<IUserInteractionService, SukiUserInteractionService>();
         services.AddSingleton<IThemeService, SukiThemeService>();
+        services.AddSingleton(provider => new UserPreferencesService(
+            UserPreferencesService.DefaultPath, provider.GetRequiredService<ILogger<UserPreferencesService>>()));
 
         services.AddSingleton<EditorSettingsViewModel>();
         services.AddSingleton<DocumentViewModelFactory>();
